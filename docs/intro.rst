@@ -7,7 +7,7 @@
 Introduction
 ==============
 
-This is the documentation for discord.py, a library for Python to aid
+This is the documentation for discordIO, a library for Python to aid
 in creating applications that utilise the Discord API.
 
 Prerequisites
