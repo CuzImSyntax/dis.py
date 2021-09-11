@@ -76,6 +76,7 @@ from .stage_instance import StageInstance
 from .threads import Thread, ThreadMember
 from .sticker import GuildSticker
 from .file import File
+from .application import ApplicationCommand
 
 
 __all__ = (
@@ -2942,3 +2943,43 @@ class Guild(Hashable):
         ws = self._state._get_websocket(self.id)
         channel_id = channel.id if channel else None
         await ws.voice_state(self.id, channel_id, self_mute, self_deaf)
+
+    async def fetch_guild_commands(self):
+        """|coro|
+
+        Retrieves all of the bots application commands in a specific guild.
+
+        .. versionadded:: 2.0
+
+        Raises
+        -------
+        :exc:`.HTTPException`
+            Retrieving the application commands failed.
+
+        Returns
+        ---------
+        List[:class:`.ApplicationCommand`]
+        All of the bots application commands in a specific guild
+        """
+        data = await self._state.http.get_guild_commands(self._state.self_id, self.id)
+        return [ApplicationCommand(state=self._state, data=applicationcommand) for applicationcommand in data]
+
+    async def fetch_guild_command(self, command_id: int):
+        """|coro|
+
+        Retrieves a application command with the given ID in a specific guild.
+
+        .. versionadded:: 2.0
+
+        Raises
+        -------
+        :exc:`.HTTPException`
+            Retrieving the application command failed.
+
+        Returns
+        ---------
+        List[:class:`.ApplicationCommand`]
+        All of the bots application commands in a specific guild
+        """
+        data = await self._state.http.get_guild_command(self._state.self_id, self.id, command_id)
+        return ApplicationCommand(data=data, state=self._state)

@@ -61,6 +61,7 @@ from .ui.view import View
 from .stage_instance import StageInstance
 from .threads import Thread
 from .sticker import GuildSticker, StandardSticker, StickerPack, _sticker_factory
+from .application import ApplicationCommand
 
 if TYPE_CHECKING:
     from .abc import SnowflakeTime, PrivateChannel, GuildChannel, Snowflake
@@ -1598,6 +1599,46 @@ class Client:
 
         data = await state.http.start_private_message(user.id)
         return state.add_dm_channel(data)
+
+    async def fetch_global_commands(self):
+        """|coro|
+
+        Retrieves all of the bots application commands.
+
+        .. versionadded:: 2.0
+
+        Raises
+        -------
+        :exc:`.HTTPException`
+            Retrieving the application commands failed.
+
+        Returns
+        ---------
+        List[:class:`.ApplicationCommand`]
+        All of the bots application commands
+        """
+        data = await self.http.get_global_commands(self._connection.self_id)
+        return [ApplicationCommand(state=self._connection, data=applicationcommand) for applicationcommand in data]
+
+    async def fetch_global_command(self, command_id: int):
+        """|coro|
+
+        Retrieves a application command with the given ID.
+
+        .. versionadded:: 2.0
+
+        Raises
+        -------
+        :exc:`.HTTPException`
+            Retrieving the application command failed.
+
+        Returns
+        ---------
+        List[:class:`.ApplicationCommand`]
+        All of the bots application commands
+        """
+        data = await self.http.get_global_command(self._connection.self_id, command_id)
+        return ApplicationCommand(data=data, state=self._connection)
 
     def add_view(self, view: View, *, message_id: Optional[int] = None) -> None:
         """Registers a :class:`~discord.ui.View` for persistent listening.
