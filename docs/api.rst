@@ -3920,6 +3920,30 @@ PartialWebhookChannel
 
 .. _discord_api_data:
 
+ApplicationCommand
+~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ApplicationCommand
+
+.. autoclass:: ApplicationCommand()
+    :members:
+
+ApplicationCommandOption
+~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ApplicationCommandOption
+
+.. autoclass:: ApplicationCommandOption()
+    :members:
+
+ApplicationCommandOptionChoice
+~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ApplicationCommandOptionChoice
+
+.. autoclass:: ApplicationCommandOptionChoice()
+    :members:
+
 Data Classes
 --------------
 

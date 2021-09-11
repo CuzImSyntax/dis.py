@@ -11,6 +11,7 @@ Welcome to discordIO
 
 discordIO is a modern, easy to use, feature-rich, and async ready API wrapper
 for Discord.
+- discordIO is built on top of the discontinued discord.py library
 
 **Features:**
 
