@@ -13,7 +13,7 @@ in creating applications that utilise the Discord API.
 Prerequisites
 ---------------
 
-discord.py works with Python 3.8 or higher. Support for earlier versions of Python
+discordIO works with Python 3.8 or higher. Support for earlier versions of Python
 is not provided. Python 2.7 or lower is not supported. Python 3.7 or lower is not supported.
 
 
@@ -21,6 +21,9 @@ is not provided. Python 2.7 or lower is not supported. Python 3.7 or lower is no
 
 Installing
 -----------
+
+Warning: This is currently still pointing to the old discord.py library and will be updated soon
+You can install discordIO via git if you want to contribute or test the library.
 
 You can get the library directly from PyPI: ::
 
@@ -91,7 +94,7 @@ Congratulations. You now have a virtual environment all set up.
 Basic Concepts
 ---------------
 
-discord.py revolves around the concept of :ref:`events <discord-api-events>`.
+discordIO revolves around the concept of :ref:`events <discord-api-events>`.
 An event is something you listen to and then respond to. For example, when a message
 happens, you will receive an event about it that you can respond to.
 
