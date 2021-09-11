@@ -1,14 +1,14 @@
-discordIO
+dis.py
 ==========
 
 .. image:: https://discord.com/api/guilds/336642139381301249/embed.png
    :target: https://discord.gg/r3sSKJJ
    :alt: Discord server invite
 .. image:: https://img.shields.io/pypi/v/discord.py.svg
-   :target: https://pypi.python.org/pypi/discord.py
+   :target: https://pypi.python.org/pypi/dis.py
    :alt: PyPI version info
 .. image:: https://img.shields.io/pypi/pyversions/discord.py.svg
-   :target: https://pypi.python.org/pypi/discord.py
+   :target: https://pypi.python.org/pypi/dis.py
    :alt: PyPI supported Python versions
 
 A modern, easy to use, feature-rich, and async ready API wrapper for Discord written in Python.
@@ -16,7 +16,7 @@ A modern, easy to use, feature-rich, and async ready API wrapper for Discord wri
 The Future of discord.py
 --------------------------
 
-Please read the `gist <https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1>`_ for the future of this project. It's been a good one.
+Please read the `gist <https://gist.github.com/CuzImSyntax/4a2f62751b9600a31a0d3c78100287f1>`_ for the future of this project. It's been a good one.
 
 Key Features
 -------------
@@ -33,7 +33,7 @@ Installing
 To install the library without full voice support, you can just run the following command:
 
 Warning: This is currently still pointing to the old discord.py library and will be updated soon
-You can install discordIO via git if you want to contribute or test the library.
+You can install dis.py via git if you want to contribute or test the library.
 
 .. code:: sh
 
@@ -58,8 +58,8 @@ To install the development version, do the following:
 
 .. code:: sh
 
-    $ git clone https://github.com/CuzImSyntax/discordIO
-    $ cd discordIO
+    $ git clone https://github.com/CuzImSyntax/dis.py
+    $ cd dis.py
     $ python3 -m pip install -U .[voice]
 
 

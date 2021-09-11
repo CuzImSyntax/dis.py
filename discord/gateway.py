@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-present Rapptz
+Copyright (c) 2015-2021 Rapptz 2021-present CuzImSyntax
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -375,8 +375,8 @@ class DiscordWebSocket:
                 'token': self.token,
                 'properties': {
                     '$os': sys.platform,
-                    '$browser': 'discord.py',
-                    '$device': 'discord.py',
+                    '$browser': 'dis.py',
+                    '$device': 'dis.py',
                     '$referrer': '',
                     '$referring_domain': ''
                 },

@@ -1,17 +1,17 @@
-discord.py
+dis.py
 ==========
 
 .. image:: https://discord.com/api/guilds/336642139381301249/embed.png
    :target: https://discord.gg/nXzj3dg
    :alt: Discordサーバーの招待
 .. image:: https://img.shields.io/pypi/v/discord.py.svg
-   :target: https://pypi.python.org/pypi/discord.py
+   :target: https://pypi.python.org/pypi/dis.py
    :alt: PyPIのバージョン情報
 .. image:: https://img.shields.io/pypi/pyversions/discord.py.svg
-   :target: https://pypi.python.org/pypi/discord.py
+   :target: https://pypi.python.org/pypi/dis.py
    :alt: PyPIのサポートしているPythonのバージョン
 
-discord.py は機能豊富かつモダンで使いやすい、非同期処理にも対応したDiscord用のAPIラッパーです。
+dis.py は機能豊富かつモダンで使いやすい、非同期処理にも対応したDiscord用のAPIラッパーです。
 
 主な特徴
 -------------
@@ -30,28 +30,28 @@ discord.py は機能豊富かつモダンで使いやすい、非同期処理に
 .. code:: sh
 
     # Linux/OS X
-    python3 -m pip install -U discord.py
+    python3 -m pip install -U dis.py
 
     # Windows
-    py -3 -m pip install -U discord.py
+    py -3 -m pip install -U dis.py
 
 音声サポートが必要なら、次のコマンドを実行しましょう:
 
 .. code:: sh
 
     # Linux/OS X
-    python3 -m pip install -U discord.py[voice]
+    python3 -m pip install -U dis.py[voice]
 
     # Windows
-    py -3 -m pip install -U discord.py[voice]
+    py -3 -m pip install -U dis.py[voice]
 
 
 開発版をインストールしたいのならば、次の手順に従ってください:
 
 .. code:: sh
 
-    $ git clone https://github.com/Rapptz/discord.py
-    $ cd discord.py
+    $ git clone https://github.com/CuzImSyntax/dis.py
+    $ cd dis.py
     $ python3 -m pip install -U .[voice]
 
 

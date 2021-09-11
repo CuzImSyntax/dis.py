@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-present Rapptz
+Copyright (c) 2015-2021 Rapptz 2021-present CuzImSyntax
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -135,7 +135,7 @@ class ApplicationCommandOption(Hashable):
         Shows whether the application command option is required.
     type: :class:`ApplicationCommandOptionType`
         The application commands option type (Whether it is a sub command, etc.)
-    options: Optional[List[:class:`ApplicationCommandOptionType`]]
+    options: Optional[List[:class:`ApplicationCommandOption`]]
         The application command's options.
     choices: Optional[List[:class:`ApplicationCommandOptionChoice`]]
         The application command option choices.
