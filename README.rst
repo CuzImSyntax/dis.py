@@ -31,6 +31,7 @@ Installing
 **Python 3.8 or higher is required**
 
 To install the library without full voice support, you can just run the following command:
+
 Warning: This is currently still pointing to the old discord.py library and will be updated soon
 You can install discordIO via git if you want to contribute or test the library.
 
@@ -115,6 +116,7 @@ You can find more examples in the examples directory.
 Links
 ------
 Warning: This is currently still pointing to the old discord.py links and will be updated soon
+
 - `Documentation <https://discordpy.readthedocs.io/en/latest/index.html>`_
 - `Official Discord Server <https://discord.gg/r3sSKJJ>`_
 - `Discord API <https://discord.gg/discord-api>`_
