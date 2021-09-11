@@ -58,33 +58,34 @@ __all__ = (
 class ApplicationCommandOptionChoice(Hashable):
     """Represents a Discord application command option choice.
 
-            .. container:: operations
+    .. versionadded:: 2.0
 
-                .. describe:: x == y
+    .. container:: operations
 
-                    Checks if two application command option choices are equal.
+        .. describe:: x == y
 
-                .. describe:: x != y
+            Checks if two application command option choices are equal.
 
-                    Checks if two application command option choices are not equal.
+        .. describe:: x != y
 
-                .. describe:: hash(x)
+            Checks if two application command option choices are not equal.
 
-                    Returns the application command options choice's hash.
+        .. describe:: hash(x)
 
-                .. describe:: str(x)
+            Returns the application command options choice's hash.
 
-                    Returns the application command options choics's name.
+        .. describe:: str(x)
 
-            Attributes
-            ----------
-                .. versionadded:: 2.0
-            name: :class:`str`
-                The name of the application command option choice.
-            value: :class:'str'
-                The value of the application command option choice.
+            Returns the application command options choics's name.
 
-            """
+    Attributes
+    ----------
+    name: :class:`str`
+        The name of the application command option choice.
+    value: :class:`str`
+        The value of the application command option choice.
+
+    """
 
     __slots__ = (
         '_state',
@@ -104,41 +105,42 @@ class ApplicationCommandOptionChoice(Hashable):
 class ApplicationCommandOption(Hashable):
     """Represents a Discord application command option.
 
-        .. container:: operations
+    .. versionadded:: 2.0
 
-            .. describe:: x == y
+    .. container:: operations
 
-                Checks if two application command options are equal.
+        .. describe:: x == y
 
-            .. describe:: x != y
+            Checks if two application command options are equal.
 
-                Checks if two application command options are not equal.
+        .. describe:: x != y
 
-            .. describe:: hash(x)
+            Checks if two application command options are not equal.
 
-                Returns the application command options's hash.
+        .. describe:: hash(x)
 
-            .. describe:: str(x)
+            Returns the application command options's hash.
 
-                Returns the application command options's name.
+        .. describe:: str(x)
 
-        Attributes
-        ----------
-            .. versionadded:: 2.0
-        name: :class:`str`
-            The name of the application command option.
-        description: :class:'str'
-            The description of the application command.
-        required: Optional[:class:`bool`]
-            Shows whether the application command option is required.
-        type: :class:'ApplicationCommandOptionType'
-            The application commands option type (Whether it is a sub command, etc.)
-        options: Optional[List[:class:'ApplicationCommandOptionType']]
-            The application command's options.
-        choices: Optional[List[:class:'ApplicationCommandOptionChoice']]
-            The application command option choices.
+            Returns the application command options's name.
 
-        """
+    Attributes
+    ----------
+    name: :class:`str`
+        The name of the application command option.
+    description: :class:`str`
+        The description of the application command.
+    required: Optional[:class:`bool`]
+        Shows whether the application command option is required.
+    type: :class:`ApplicationCommandOptionType`
+        The application commands option type (Whether it is a sub command, etc.)
+    options: Optional[List[:class:`ApplicationCommandOptionType`]]
+        The application command's options.
+    choices: Optional[List[:class:`ApplicationCommandOptionChoice`]]
+        The application command option choices.
+
+    """
 
     __slots__ = (
         '_state',
@@ -169,6 +171,8 @@ class ApplicationCommandOption(Hashable):
 class ApplicationCommand(Hashable):
     """Represents a Discord application command.
 
+    .. versionadded:: 2.0
+
     .. container:: operations
 
         .. describe:: x == y
@@ -189,19 +193,18 @@ class ApplicationCommand(Hashable):
 
     Attributes
     ----------
-        .. versionadded:: 2.0
     id: :class:`int`
         The ID for the application command.
     name: :class:`str`
         The name of the application command.
-    description: :class:'str'
+    description: :class:`str`
         The description of the application command.
     guild_id: Optional[:class:`int`]
         The guild_id the application command belongs to, could be None when
         it is a guild command.
-    type: :class:'ApplicationCommandType'
+    type: :class:`AppicationCommandType`
         The application commands type (Whether it is a chat input command, etc.)
-    options: Optional[List[:class:'ApplicationCommandOption']]
+    options: Optional[List[:class:`ApplicationCommandOption`]]
         The application command's options.
 
     """
@@ -246,7 +249,7 @@ class ApplicationCommand(Hashable):
             Deleting the application command failed.
         """
 
-        #Checks wether the application command has an guild_id attribute and deletes a guild command or a global command
+        #Checks whether the application command has an guild_id attribute and deletes a guild command or a global command
         # depending on this
         if self.guild_id:
             return await self._state.http.delete_guild_command(self._state.self_id, self.guild_id, self.id)

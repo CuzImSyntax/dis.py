@@ -1614,8 +1614,8 @@ class Client:
 
         Returns
         ---------
-        List[:class:`.ApplicationCommand`]
-        All of the bots application commands
+        List[:class:`ApplicationCommand`]
+            All of the bots application commands
         """
         data = await self.http.get_global_commands(self._connection.self_id)
         return [ApplicationCommand(state=self._connection, data=applicationcommand) for applicationcommand in data]
@@ -1634,8 +1634,8 @@ class Client:
 
         Returns
         ---------
-        List[:class:`.ApplicationCommand`]
-        All of the bots application commands
+        List[:class:`ApplicationCommand`]
+            All of the bots application commands
         """
         data = await self.http.get_global_command(self._connection.self_id, command_id)
         return ApplicationCommand(data=data, state=self._connection)

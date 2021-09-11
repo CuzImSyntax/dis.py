@@ -2898,6 +2898,8 @@ class Guild(Hashable):
         Returns
         --------
         List[:class:`Member`]
+
+        Return type:
             The list of members that have matched the query.
         """
 
@@ -2958,8 +2960,8 @@ class Guild(Hashable):
 
         Returns
         ---------
-        List[:class:`.ApplicationCommand`]
-        All of the bots application commands in a specific guild
+        List[:class:`ApplicationCommand`]
+            All of the bots application commands in a specific guild
         """
         data = await self._state.http.get_guild_commands(self._state.self_id, self.id)
         return [ApplicationCommand(state=self._state, data=applicationcommand) for applicationcommand in data]
@@ -2978,8 +2980,8 @@ class Guild(Hashable):
 
         Returns
         ---------
-        List[:class:`.ApplicationCommand`]
-        All of the bots application commands in a specific guild
+        List[:class:`ApplicationCommand`]
+            All of the bots application commands in a specific guild
         """
         data = await self._state.http.get_guild_command(self._state.self_id, self.id, command_id)
         return ApplicationCommand(data=data, state=self._state)
