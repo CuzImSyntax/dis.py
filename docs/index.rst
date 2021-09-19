@@ -11,7 +11,7 @@ Welcome to dis.py
 
 dis.py is a modern, easy to use, feature-rich, and async ready API wrapper
 for Discord.
-- dis.py is built on top of the discontinued dis.py library
+- dis.py is built on top of the discontinued discord.py library
 
 **Features:**
 
