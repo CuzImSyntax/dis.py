@@ -30,6 +30,7 @@ import collections
 import collections.abc
 import inspect
 import importlib.util
+import logging
 import sys
 import traceback
 import types
@@ -37,17 +38,19 @@ from typing import Any, Callable, Mapping, List, Dict, TYPE_CHECKING, Optional, 
 
 import discord
 
-from .core import GroupMixin
+from .core import GroupMixin, AppCommand
 from .view import StringView
-from .context import Context
+from .context import Context, InteractionContext
 from . import errors
 from .help import HelpCommand, DefaultHelpCommand
 from .cog import Cog
+from ...types.interactions import ApplicationCommandOption, EditApplicationCommand
 
 if TYPE_CHECKING:
     import importlib.machinery
 
     from discord.message import Message
+    from discord.interactions import Interaction
     from ._types import (
         Check,
         CoroFunc,
@@ -65,6 +68,7 @@ MISSING: Any = discord.utils.MISSING
 T = TypeVar('T')
 CFT = TypeVar('CFT', bound='CoroFunc')
 CXT = TypeVar('CXT', bound='Context')
+ICXT = TypeVar('ICXT', bound="InteractionContext")
 
 def when_mentioned(bot: Union[Bot, AutoShardedBot], msg: Message) -> List[str]:
     """A callable that implements a command prefix equivalent to being mentioned.
@@ -132,6 +136,7 @@ class BotBase(GroupMixin):
         self._after_invoke = None
         self._help_command = None
         self.description = inspect.cleandoc(description) if description else ''
+        self.testing_guild: Optional[int] = options.get('testing_guild')
         self.owner_id = options.get('owner_id')
         self.owner_ids = options.get('owner_ids', set())
         self.strip_after_prefix = options.get('strip_after_prefix', False)
@@ -976,6 +981,42 @@ class BotBase(GroupMixin):
         ctx.command = self.all_commands.get(invoker)
         return ctx
 
+    async def get_interaction_context(self, interaction: Interaction, *, cls: Type[ICXT] = InteractionContext) -> CXT:
+        r"""|coro|
+
+        Returns the invocation context from the message.
+
+        This is a more low-level counter-part for :meth:`.process_commands`
+        to allow users more fine grained control over the processing.
+
+        The returned context is not guaranteed to be a valid invocation
+        context, :attr:`.Context.valid` must be checked to make sure it is.
+        If the context is not valid then it is not a valid candidate to be
+        invoked under :meth:`~.Bot.invoke`.
+
+        Parameters
+        -----------
+        interaction: :class:`discord.Interaction`
+            The interaction to get the invocation context from.
+        cls
+            The factory class that will be used to create the context.
+            By default, this is :class:`.InteractionContext`. Should a custom
+            class be provided, it must be similar enough to :class:`.InteractionContext`\'s
+            interface.
+
+        Returns
+        --------
+        :class:`.InteractionContext`
+            The invocation context. The type of this can change via the
+            ``cls`` parameter.
+        """
+
+        ctx = cls(bot=self, interaction=interaction)
+
+        # type-checker fails to narrow invoked_prefix type.
+        ctx.command = self.all_app_commands.get(interaction.data['name'])
+        return ctx
+
     async def invoke(self, ctx: Context) -> None:
         """|coro|
 
@@ -1001,6 +1042,29 @@ class BotBase(GroupMixin):
         elif ctx.invoked_with:
             exc = errors.CommandNotFound(f'Command "{ctx.invoked_with}" is not found')
             self.dispatch('command_error', ctx, exc)
+
+    async def app_invoke(self, ctx: InteractionContext) -> None:
+        """|coro|
+
+        Invokes the application command given under the invocation context and
+        handles all the internal event dispatch mechanisms.
+
+        Parameters
+        -----------
+        ctx: :class:`.InteractionContext`
+            The invocation context to invoke.
+        """
+        if ctx.command is not None:
+            self.dispatch('app_command', ctx)
+            try:
+                if await self.can_run(ctx, call_once=True):
+                    await ctx.command.invoke(ctx)
+                else:
+                    raise errors.CheckFailure('The global check once functions failed.')
+            except errors.CommandError as exc:
+                await ctx.command.dispatch_error(ctx, exc)
+            else:
+                self.dispatch('app_command_completion', ctx)
 
     async def process_commands(self, message: Message) -> None:
         """|coro|
@@ -1030,8 +1094,69 @@ class BotBase(GroupMixin):
         ctx = await self.get_context(message)
         await self.invoke(ctx)
 
+    async def process_app_commands(self, interaction: Interaction) -> None:
+        """|coro|
+
+        This function processes the commands that have been registered
+        to the bot and other groups. Without this coroutine, none of the
+        commands will be triggered.
+
+        By default, this coroutine is called inside the :func:`.on_message`
+        event. If you choose to override the :func:`.on_message` event, then
+        you should invoke this coroutine as well.
+
+        This is built using other low level tools, and is equivalent to a
+        call to :meth:`~.Bot.get_context` followed by a call to :meth:`~.Bot.invoke`.
+
+        This also checks if the message's author is a bot and doesn't
+        call :meth:`~.Bot.get_context` or :meth:`~.Bot.invoke` if so.
+
+        Parameters
+        -----------
+        interaction: :class:`discord.Interaction`
+            The interaction to process application commands for.
+        """
+
+        ctx = await self.get_interaction_context(interaction)
+        await self.app_invoke(ctx)
+
     async def on_message(self, message):
         await self.process_commands(message)
+
+    async def on_interaction(self, interaction):
+        await self.process_app_commands(interaction)
+
+    type_dict = {
+        "sub_command": 1,
+        "sub_command_group": 2,
+        str: 3,
+        int: 4,
+        bool: 5,
+        discord.user.User: 6,
+        discord.member.Member: 6,
+        discord.channel.TextChannel: 7,
+        discord.channel.StageChannel: 7,
+        discord.channel.VoiceChannel: 7,
+        discord.role.Role: 8,
+        "Mentionable": 9,
+        float: 10
+    }
+
+    async def convert_app_command(self, command: AppCommand):
+        options = []
+        for name, param in command.clean_params.items():
+            type_ = self.type_dict.get(param.annotation, 3)
+            #ToDo implement choices
+            #ToDo implement options -> only if command is group
+            option = ApplicationCommandOption(type=type_, name=name,
+                                              description=command.arg_descriptions.get(name, "-"),
+                                              required=param.default is param.empty)
+
+            options.append(option)
+
+        return EditApplicationCommand(name=command.name, description=command.description,
+                                      default_permission=True, options=options)
+
 
 class Bot(BotBase, discord.Client):
     """Represents a discord bot.
@@ -1080,6 +1205,9 @@ class Bot(BotBase, discord.Client):
         you require group commands to be case insensitive as well.
     description: :class:`str`
         The content prefixed into the default help message.
+    testing_guild Optional[:class:`int`]
+        When set, application commands will only be updated / registered on the given guild, helpful for testing
+        application commands
     help_command: Optional[:class:`.HelpCommand`]
         The help command implementation to use. This can be dynamically
         set at runtime. To remove the help command pass ``None``. For more
@@ -1103,7 +1231,36 @@ class Bot(BotBase, discord.Client):
 
         .. versionadded:: 1.7
     """
-    pass
+    async def register_app_commands(self):
+        #ToDo remove old commands when not used anymore
+        if not self.testing_guild:
+            global_overwrites = []
+            guild_commands: Dict[int, List[EditApplicationCommand]] = {}
+            commands_ = await self.fetch_global_commands()
+            registered_commands = []
+            for command in commands_:
+                registered_commands.append(command.name)
+            for command in self.app_commands:
+                command_ = await self.convert_app_command(command)
+                if not command.guilds:
+                    global_overwrites.append(command_)
+                else:
+                    for guild_id in command.guilds:
+                        data = guild_commands.get(guild_id, list())
+                        data.append(command_)
+                        guild_commands[guild_id] = data
+
+            await self.http.bulk_upsert_global_commands(self.user.id, global_overwrites)
+            for guild, commands_ in guild_commands.items():
+                pass
+                await self.http.bulk_upsert_guild_commands(self.user.id, guild, commands_)
+
+        else:
+            # ToDo only update / register command in guild
+            print("Updating app commands only on testing guild")
+
+    async def on_connect(self):
+        await self.register_app_commands()
 
 class AutoShardedBot(BotBase, discord.AutoShardedClient):
     """This is similar to :class:`.Bot` except that it is inherited from
