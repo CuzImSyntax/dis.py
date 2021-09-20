@@ -32,6 +32,7 @@ import discord.abc
 import discord.utils
 
 from discord.message import Message
+from discord.interactions import Interaction
 
 if TYPE_CHECKING:
     from typing_extensions import ParamSpec
@@ -45,16 +46,16 @@ if TYPE_CHECKING:
 
     from .bot import Bot, AutoShardedBot
     from .cog import Cog
-    from .core import Command
+    from .core import Command, AppCommand
     from .help import HelpCommand
     from .view import StringView
 
 __all__ = (
     'Context',
+    'InteractionContext'
 )
 
 MISSING: Any = discord.utils.MISSING
-
 
 T = TypeVar('T')
 BotT = TypeVar('BotT', bound="Union[Bot, AutoShardedBot]")
@@ -123,21 +124,21 @@ class Context(discord.abc.Messageable, Generic[BotT]):
     """
 
     def __init__(self,
-        *,
-        message: Message,
-        bot: BotT,
-        view: StringView,
-        args: List[Any] = MISSING,
-        kwargs: Dict[str, Any] = MISSING,
-        prefix: Optional[str] = None,
-        command: Optional[Command] = None,
-        invoked_with: Optional[str] = None,
-        invoked_parents: List[str] = MISSING,
-        invoked_subcommand: Optional[Command] = None,
-        subcommand_passed: Optional[str] = None,
-        command_failed: bool = False,
-        current_parameter: Optional[inspect.Parameter] = None,
-    ):
+                 *,
+                 message: Message,
+                 bot: BotT,
+                 view: StringView,
+                 args: List[Any] = MISSING,
+                 kwargs: Dict[str, Any] = MISSING,
+                 prefix: Optional[str] = None,
+                 command: Optional[Command] = None,
+                 invoked_with: Optional[str] = None,
+                 invoked_parents: List[str] = MISSING,
+                 invoked_subcommand: Optional[Command] = None,
+                 subcommand_passed: Optional[str] = None,
+                 command_failed: bool = False,
+                 current_parameter: Optional[inspect.Parameter] = None,
+                 ):
         self.message: Message = message
         self.bot: BotT = bot
         self.args: List[Any] = args or []
@@ -233,7 +234,7 @@ class Context(discord.abc.Messageable, Generic[BotT]):
             view.index = len(self.prefix or '')
             view.previous = 0
             self.invoked_parents = []
-            self.invoked_with = view.get_word() # advance to get the root command
+            self.invoked_with = view.get_word()  # advance to get the root command
         else:
             to_call = cmd
 
@@ -398,3 +399,250 @@ class Context(discord.abc.Messageable, Generic[BotT]):
     @discord.utils.copy_doc(Message.reply)
     async def reply(self, content: Optional[str] = None, **kwargs: Any) -> Message:
         return await self.message.reply(content, **kwargs)
+
+
+class InteractionContext:
+    r"""Represents the context in which a application command is being invoked under.
+
+    This class contains a lot of meta data to help you understand more about
+    the invocation context. This class is not created manually and is instead
+    passed around to commands as the first parameter.
+
+    .. versionadded:: 2.0
+
+    Attributes
+    -----------
+    interaction: :class:`.Interaction`
+        The interaction that triggered the command being executed.
+    bot: :class:`.Bot`
+        The bot that contains the command being executed.
+    args: :class:`list`
+        The list of transformed arguments that were passed into the command.
+        If this is accessed during the :func:`.on_command_error` event
+        then this list could be incomplete.
+    kwargs: :class:`dict`
+        A dictionary of transformed arguments that were passed into the command.
+        Similar to :attr:`args`\, if this is accessed in the
+        :func:`.on_command_error` event then this dict could be incomplete.
+    current_parameter: Optional[:class:`inspect.Parameter`]
+        The parameter that is currently being inspected and converted.
+        This is only of use for within converters.
+    command: Optional[:class:`AppCommand`]
+        The application command that is being invoked currently.
+    invoked_with: Optional[:class:`str`]
+        The application command name that triggered this invocation.
+    invoked_parents: List[:class:`str`]
+        The command names of the parents that triggered this invocation.
+
+        For example in commands ``?a b c test``, the invoked parents are ``['a', 'b', 'c']``.
+    invoked_subcommand: Optional[:class:`Command`]
+        The application subcommand that was invoked.
+        If no valid application subcommand was invoked then this is equal to ``None``.
+    subcommand_passed: Optional[:class:`str`]
+        The string that was attempted to call a application subcommand. This does not have
+        to point to a valid registered subcommand and could just point to a
+        nonsense string. If nothing was passed to attempt a call to a
+        subcommand then this is set to ``None``.
+    command_failed: :class:`bool`
+        A boolean that indicates if the command failed to be parsed, checked,
+        or invoked.
+    """
+
+    def __init__(self,
+                 *,
+                 interaction: Interaction,
+                 bot: BotT,
+                 args: List[Any] = MISSING,
+                 kwargs: Dict[str, Any] = MISSING,
+                 view_item: Any = None,
+                 command: Optional[AppCommand] = None,
+                 invoked_parents: List[str] = MISSING,
+                 invoked_subcommand: Optional[AppCommand] = None,
+                 subcommand_passed: Optional[str] = None,
+                 command_failed: bool = False,
+                 current_parameter: Optional[inspect.Parameter] = None,
+                 ):
+        self.interaction: Interaction = interaction
+        self.bot: BotT = bot
+        self.args: List[Any] = args or []
+        self.kwargs: Dict[str, Any] = kwargs or {}
+        self.view_item: Any = view_item
+        self.command: Optional[AppCommand] = command
+        self.invoked_parents: List[str] = invoked_parents or []
+        self.invoked_subcommand: Optional[AppCommand] = invoked_subcommand
+        self.subcommand_passed: Optional[str] = subcommand_passed
+        self.command_failed: bool = command_failed
+        self.current_parameter: Optional[inspect.Parameter] = current_parameter
+        self._state: ConnectionState = self.interaction._state
+
+    async def invoke(self, command: AppCommand[CogT, P, T], /, *args: P.args, **kwargs: P.kwargs) -> T:
+        r"""|coro|
+
+        Calls a application command with the arguments given.
+
+        This is useful if you want to just call the callback that a
+        :class:`.AppCommand` holds internally.
+
+        .. note::
+
+            This does not handle converters, checks, cooldowns, pre-invoke,
+            or after-invoke hooks in any matter. It calls the internal callback
+            directly as-if it was a regular function.
+
+            You must take care in passing the proper arguments when
+            using this function.
+
+        Parameters
+        -----------
+        command: :class:`.Command`
+            The command that is going to be called.
+        \*args
+            The arguments to use.
+        \*\*kwargs
+            The keyword arguments to use.
+
+        Raises
+        -------
+        TypeError
+            The command argument to invoke is missing.
+        """
+        return await command(self, *args, **kwargs)
+
+    @property
+    def valid(self) -> bool:
+        """:class:`bool`: Checks if the invocation context is valid to be invoked with."""
+        return self.command is not None
+
+    async def _get_channel(self) -> discord.abc.Messageable:
+        return self.channel
+
+    @property
+    def cog(self) -> Optional[Cog]:
+        """Optional[:class:`.Cog`]: Returns the cog associated with this context's application command. None if it does not exist."""
+
+        if self.command is None:
+            return None
+        return self.command.cog
+
+    @discord.utils.cached_property
+    def guild(self) -> Optional[Guild]:
+        """Optional[:class:`.Guild`]: Returns the guild associated with this context's application command. None if not available."""
+        return self.interaction.guild
+
+    @discord.utils.cached_property
+    def channel(self) -> MessageableChannel:
+        """Union[:class:`.abc.Messageable`]: Returns the channel associated with this context's application command.
+        Shorthand for :attr:`.Interaction.channel`.
+        """
+        return self.interaction.channel
+
+    @discord.utils.cached_property
+    def user(self) -> Union[User, Member]:
+        """Union[:class:`~discord.User`, :class:`.Member`]:
+        Returns the user associated with this context's application command. Shorthand for :attr:`.Interaction.user`
+        """
+        return self.interaction.user
+
+    @discord.utils.cached_property
+    def me(self) -> Union[Member, ClientUser]:
+        """Union[:class:`.Member`, :class:`.ClientUser`]:
+        Similar to :attr:`.Guild.me` except it may return the :class:`.ClientUser` in private message contexts.
+        """
+        # bot.user will never be None at this point.
+        return self.guild.me if self.guild is not None else self.bot.user  # type: ignore
+
+    @property
+    def voice_client(self) -> Optional[VoiceProtocol]:
+        r"""Optional[:class:`.VoiceProtocol`]: A shortcut to :attr:`.Guild.voice_client`\, if applicable."""
+        g = self.guild
+        return g.voice_client if g else None
+
+    async def send_help(self, *args: Any) -> Any:
+        #ToDo implement help command for app commands
+        """send_help(entity=<bot>)
+
+        |coro|
+
+        Shows the help command for the specified entity if given.
+        The entity can be a command or a cog.
+
+        If no entity is given, then it'll show help for the
+        entire bot.
+
+        If the entity is a string, then it looks up whether it's a
+        :class:`Cog` or a :class:`Command`.
+
+        .. note::
+
+            Due to the way this function works, instead of returning
+            something similar to :meth:`~.commands.HelpCommand.command_not_found`
+            this returns :class:`None` on bad input or no help command.
+
+        Parameters
+        ------------
+        entity: Optional[Union[:class:`Command`, :class:`Cog`, :class:`str`]]
+            The entity to show help for.
+
+        Returns
+        --------
+        Any
+            The result of the help command, if any.
+        """
+        from .core import AppGroup, AppCommand, wrap_callback
+        from .errors import CommandError
+
+        bot = self.bot
+        cmd = bot.help_command
+
+        if cmd is None:
+            return None
+
+        cmd = cmd.copy()
+        cmd.context = self
+        if len(args) == 0:
+            await cmd.prepare_help_command(self, None)
+            mapping = cmd.get_bot_mapping()
+            injected = wrap_callback(cmd.send_bot_help)
+            try:
+                return await injected(mapping)
+            except CommandError as e:
+                await cmd.on_help_command_error(self, e)
+                return None
+
+        entity = args[0]
+        if isinstance(entity, str):
+            entity = bot.get_cog(entity) or bot.get_app_command(entity)
+
+        if entity is None:
+            return None
+
+        try:
+            entity.qualified_name
+        except AttributeError:
+            # if we're here then it's not a cog, group, or command.
+            return None
+
+        await cmd.prepare_help_command(self, entity.qualified_name)
+
+        try:
+            if hasattr(entity, '__cog_commands__'):
+                injected = wrap_callback(cmd.send_cog_help)
+                return await injected(entity)
+            elif isinstance(entity, AppGroup):
+                injected = wrap_callback(cmd.send_group_help)
+                return await injected(entity)
+            elif isinstance(entity, AppCommand):
+                injected = wrap_callback(cmd.send_command_help)
+                return await injected(entity)
+            else:
+                return None
+        except CommandError as e:
+            await cmd.on_help_command_error(self, e)
+
+    async def reply(self, content: Optional[str] = None, **kwargs: Any) -> Message:
+        #ToDo Docs
+        return await self.interaction.response.send_message(content, **kwargs)
+
+    async def send(self, content: Optional[str] = None, **kwargs: Any) -> Message:
+        #ToDo Docs
+        return await self.channel.send(content, **kwargs)
