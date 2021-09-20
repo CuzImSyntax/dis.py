@@ -101,6 +101,9 @@ class ApplicationCommandOptionChoice(Hashable):
         self.name: str = applicationcommandoptionchoice.get('name')
         self.value: Union[str, int] = applicationcommandoptionchoice.get('value')
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class ApplicationCommandOption(Hashable):
     """Represents a Discord application command option.
@@ -166,6 +169,9 @@ class ApplicationCommandOption(Hashable):
         self.choices: Optional[List[ApplicationCommandOptionChoice]] = [ApplicationCommandOptionChoice(state=self._state, data=choice) for choice in choices] if choices else None
         options = applicationcommandoption.get('options')
         self.options: Optional[List[ApplicationCommandOption]] = [ApplicationCommandOption(state=self._state, data=option) for option in options] if options else None
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class ApplicationCommand(Hashable):
