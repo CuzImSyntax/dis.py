@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2015-present Rapptz
+Copyright (c) 2015-2021 Rapptz 2021-present CuzImSyntax
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -24,16 +24,17 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 import inspect
+
 import discord.utils
 
-from typing import Any, Callable, ClassVar, Dict, Generator, List, Optional, TYPE_CHECKING, Tuple, TypeVar, Type
+from typing import Any, Callable, ClassVar, Dict, Generator, List, Optional, TYPE_CHECKING, Tuple, TypeVar, Type, Union
 
 from ._types import _BaseCommand
 
 if TYPE_CHECKING:
     from .bot import BotBase
     from .context import Context
-    from .core import Command
+    from .core import Command, AppCommand
 
 __all__ = (
     'CogMeta',
@@ -107,6 +108,7 @@ class CogMeta(type):
     __cog_name__: str
     __cog_settings__: Dict[str, Any]
     __cog_commands__: List[Command]
+    __cog_app_commands__: List[AppCommand]
     __cog_listeners__: List[Tuple[str, str]]
 
     def __new__(cls: Type[CogMeta], *args: Any, **kwargs: Any) -> CogMeta:
@@ -120,6 +122,7 @@ class CogMeta(type):
         attrs['__cog_description__'] = description
 
         commands = {}
+        app_commands = {}
         listeners = {}
         no_bot_cog = 'Commands or listeners must not start with cog_ or bot_ (in method {0.__name__}.{1})'
 
@@ -128,6 +131,8 @@ class CogMeta(type):
             for elem, value in base.__dict__.items():
                 if elem in commands:
                     del commands[elem]
+                if elem in app_commands:
+                    del app_commands[elem]
                 if elem in listeners:
                     del listeners[elem]
 
@@ -139,7 +144,12 @@ class CogMeta(type):
                         raise TypeError(f'Command in method {base}.{elem!r} must not be staticmethod.')
                     if elem.startswith(('cog_', 'bot_')):
                         raise TypeError(no_bot_cog.format(base, elem))
-                    commands[elem] = value
+                    from .core import AppCommand
+                    if issubclass(value, AppCommand):
+                        app_commands[elem] = value
+                    else:
+                        commands[elem] = value
+
                 elif inspect.iscoroutinefunction(value):
                     try:
                         getattr(value, '__cog_listener__')
@@ -151,6 +161,7 @@ class CogMeta(type):
                         listeners[elem] = value
 
         new_cls.__cog_commands__ = list(commands.values()) # this will be copied in Cog.__new__
+        new_cls.__cog_app_commands__ = list(app_commands.values())  # this will be copied in Cog.__new__
 
         listeners_as_list = []
         for listener in listeners.values():
@@ -186,6 +197,7 @@ class Cog(metaclass=CogMeta):
     __cog_name__: ClassVar[str]
     __cog_settings__: ClassVar[Dict[str, Any]]
     __cog_commands__: ClassVar[List[Command]]
+    __cog_app_commands__: ClassVar[List[AppCommand]]
     __cog_listeners__: ClassVar[List[Tuple[str, str]]]
 
     def __new__(cls: Type[CogT], *args: Any, **kwargs: Any) -> CogT:
@@ -198,10 +210,15 @@ class Cog(metaclass=CogMeta):
         # Either update the command with the cog provided defaults or copy it.
         # r.e type ignore, type-checker complains about overriding a ClassVar
         self.__cog_commands__ = tuple(c._update_copy(cmd_attrs) for c in cls.__cog_commands__)  # type: ignore
+        self.__cog_app_commands__ = tuple(c._update_copy(cmd_attrs) for c in cls.__cog_app_commands__)  # type: ignore
 
         lookup = {
             cmd.qualified_name: cmd
             for cmd in self.__cog_commands__
+        }
+        app_lookup = {
+            cmd.qualified_name: cmd
+            for cmd in self.__cog_app_commands__
         }
 
         # Update the Command instances dynamically as well
@@ -215,6 +232,17 @@ class Cog(metaclass=CogMeta):
                 # Update our parent's reference to our self
                 parent.remove_command(command.name)  # type: ignore
                 parent.add_command(command)  # type: ignore
+
+        for command in self.__cog_app_commands__:
+            setattr(self, command.callback.__name__, command)
+            parent = command.parent
+            if parent is not None:
+                # Get the latest parent reference
+                parent = lookup[parent.qualified_name]  # type: ignore
+
+                # Update our parent's reference to our self
+                parent.remove_app_command(command.name)  # type: ignore
+                parent.add_app_command(command)  # type: ignore
 
         return self
 
@@ -230,7 +258,21 @@ class Cog(metaclass=CogMeta):
 
                 This does not include subcommands.
         """
-        return [c for c in self.__cog_commands__ if c.parent is None]
+        return [c for c in self.__cog_app_commands__ if c.parent is None]
+
+    def get_app_commands(self) -> List[Command]:
+        r"""
+        Returns
+        --------
+        List[:class:`.AppCommand`]
+            A :class:`list` of :class:`.AppCommand`\s that are
+            defined inside this cog.
+
+            .. note::
+
+                This does not include subcommands.
+        """
+        return [c for c in self.__cog_app_commands__ if c.parent is None]
 
     @property
     def qualified_name(self) -> str:
@@ -260,6 +302,21 @@ class Cog(metaclass=CogMeta):
                 yield command
                 if isinstance(command, GroupMixin):
                     yield from command.walk_commands()
+
+    def walk_app_commands(self) -> Generator[AppCommand, None, None]:
+        """An iterator that recursively walks through this cog's commands and subcommands.
+
+        Yields
+        ------
+        Union[:class:`.Command`, :class:`.Group`]
+            A command or group from the cog.
+        """
+        from .core import GroupMixin
+        for command in self.__cog_app_commands__:
+            if command.parent is None:
+                yield command
+                if isinstance(command, GroupMixin):
+                    yield from command.walk_app_commands()
 
     def get_listeners(self) -> List[Tuple[str, Callable[..., Any]]]:
         """Returns a :class:`list` of (name, function) listener pairs that are defined in this cog.
@@ -433,6 +490,18 @@ class Cog(metaclass=CogMeta):
                             bot.remove_command(to_undo.name)
                     raise e
 
+        for index, command in enumerate(self.__cog_app_commands__):
+            command.cog = self
+            if command.parent is None:
+                try:
+                    bot.add_app_command(command)
+                except Exception as e:
+                    # undo our additions
+                    for to_undo in self.__cog_app_commands__[:index]:
+                        if to_undo.parent is None:
+                            bot.remove_app_command(to_undo.name)
+                    raise e
+
         # check if we're overriding the default
         if cls.bot_check is not Cog.bot_check:
             bot.add_check(self.bot_check)
@@ -457,6 +526,10 @@ class Cog(metaclass=CogMeta):
                 if command.parent is None:
                     bot.remove_command(command.name)
 
+            for command in self.__cog_app_commands__:
+                if command.parent is None:
+                    bot.remove_app_command(command.name)
+
             for _, method_name in self.__cog_listeners__:
                 bot.remove_listener(getattr(self, method_name))
 
@@ -465,6 +538,8 @@ class Cog(metaclass=CogMeta):
 
             if cls.bot_check_once is not Cog.bot_check_once:
                 bot.remove_check(self.bot_check_once, call_once=True)
+
+
         finally:
             try:
                 self.cog_unload()
