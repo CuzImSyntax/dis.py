@@ -66,6 +66,7 @@ __all__ = (
 # Type <prefix>help command for more info on a command.
 # You can also type <prefix>help category for more info on a category.
 
+#ToDo Implement AppCommand Support
 
 class Paginator:
     """A class that aids in paginating code blocks for Discord messages.
