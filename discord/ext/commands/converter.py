@@ -47,7 +47,7 @@ import discord
 from .errors import *
 
 if TYPE_CHECKING:
-    from .context import Context
+    from .context import Context, InteractionContext
     from discord.message import PartialMessageableChannel
 
 
@@ -1024,7 +1024,6 @@ def get_converter(param: inspect.Parameter) -> Any:
             converter = str
     return converter
 
-
 _GenericAlias = type(List[T])
 
 
@@ -1140,6 +1139,93 @@ async def run_converters(ctx: Context, converter, argument: str, param: inspect.
 
             try:
                 value = await run_converters(ctx, conv, argument, param)
+            except CommandError as exc:
+                errors.append(exc)
+            else:
+                return value
+
+        # if we're here, then we failed all the converters
+        raise BadUnionArgument(param, union_args, errors)
+
+    if origin is Literal:
+        errors = []
+        conversions = {}
+        literal_args = converter.__args__
+        for literal in literal_args:
+            literal_type = type(literal)
+            try:
+                value = conversions[literal_type]
+            except KeyError:
+                try:
+                    value = await _actual_conversion(ctx, literal_type, argument, param)
+                except CommandError as exc:
+                    errors.append(exc)
+                    conversions[literal_type] = object()
+                    continue
+                else:
+                    conversions[literal_type] = value
+
+            if value == literal:
+                return value
+
+        # if we're here, then we failed to match all the literals
+        raise BadLiteralArgument(param, literal_args, errors)
+
+    # This must be the last if-clause in the chain of origin checking
+    # Nearly every type is a generic type within the typing library
+    # So care must be taken to make sure a more specialised origin handle
+    # isn't overwritten by the widest if clause
+    if origin is not None and is_generic_type(converter):
+        converter = origin
+
+    return await _actual_conversion(ctx, converter, argument, param)
+
+
+async def run_app_converters(ctx: InteractionContext, converter, argument: str, param: inspect.Parameter):
+    """|coro|
+
+    Runs converters for a given converter, argument, and parameter.
+
+    This function does the same work that the library does under the hood.
+
+    .. versionadded:: 2.0
+
+    Parameters
+    ------------
+    ctx: :class:`InteractionContext`
+        The invocation context to run the converters under.
+    converter: Any
+        The converter to run, this corresponds to the annotation in the function.
+    argument: :class:`str`
+        The argument to convert to.
+    param: :class:`inspect.Parameter`
+        The parameter being converted. This is mainly for error reporting.
+
+    Raises
+    -------
+    CommandError
+        The converter failed to convert.
+
+    Returns
+    --------
+    Any
+        The resulting conversion.
+    """
+    origin = getattr(converter, '__origin__', None)
+
+    if origin is Union:
+        errors = []
+        _NoneType = type(None)
+        union_args = converter.__args__
+        for conv in union_args:
+            # if we got to this part in the code, then the previous conversions have failed
+            # so we should just undo the view, return the default, and allow parsing to continue
+            # with the other parameters
+            if conv is _NoneType and param.kind != param.VAR_POSITIONAL:
+                return None if param.default is param.empty else param.default
+
+            try:
+                value = await run_app_converters(ctx, conv, argument, param)
             except CommandError as exc:
                 errors.append(exc)
             else:
