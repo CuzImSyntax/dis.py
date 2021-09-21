@@ -145,7 +145,7 @@ class CogMeta(type):
                     if elem.startswith(('cog_', 'bot_')):
                         raise TypeError(no_bot_cog.format(base, elem))
                     from .core import AppCommand
-                    if issubclass(value, AppCommand):
+                    if isinstance(value, AppCommand):
                         app_commands[elem] = value
                     else:
                         commands[elem] = value
