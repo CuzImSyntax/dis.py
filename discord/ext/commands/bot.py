@@ -38,7 +38,7 @@ from typing import Any, Callable, Mapping, List, Dict, TYPE_CHECKING, Optional, 
 
 import discord
 
-from .core import GroupMixin, AppCommand
+from .core import GroupMixin, AppCommand, AppGroup
 from .view import StringView
 from .context import Context, InteractionContext
 from . import errors
@@ -1142,18 +1142,40 @@ class BotBase(GroupMixin):
         float: 10
     }
 
-    async def convert_app_command(self, command: AppCommand):
+    def get_command_options(self, command: AppCommand):
         options = []
-        for name, param in command.clean_params.items():
-            type_ = self.type_dict.get(param.annotation, 3)
-            #ToDo implement choices
-            #ToDo implement options -> only if command is group
-            option = ApplicationCommandOption(type=type_, name=name,
-                                              description=command.arg_descriptions.get(name, "-"),
-                                              required=param.default is param.empty)
 
-            options.append(option)
+        if isinstance(command, AppGroup):
+            for name, command in command.all_app_commands.items():
 
+                type_ = self.type_dict.get("sub_command")
+                if isinstance(command, AppGroup):
+                    type_ = self.type_dict.get("sub_command_group")
+
+                options_ = self.get_command_options(command)
+
+                option = ApplicationCommandOption(type=type_, name=name,
+                                                  description=command.description,
+                                                  options=options_)
+
+                options.append(option)
+
+        else:
+            for name, param in command.clean_params.items():
+                type_ = self.type_dict.get(param.annotation, 3)
+                # ToDo implement choices
+                # ToDo implement options -> only if command is group
+                option = ApplicationCommandOption(type=type_, name=name,
+                                                  description=command.arg_descriptions.get(name, "-"),
+                                                  required=param.default is param.empty)
+
+                options.append(option)
+
+        return options
+
+    async def convert_app_command(self, command: AppCommand):
+
+        options = self.get_command_options(command)
         return EditApplicationCommand(name=command.name, description=command.description,
                                       default_permission=True, options=options)
 
@@ -1252,7 +1274,7 @@ class Bot(BotBase, discord.Client):
 
             await self.http.bulk_upsert_global_commands(self.user.id, global_overwrites)
             for guild, commands_ in guild_commands.items():
-                pass
+
                 await self.http.bulk_upsert_guild_commands(self.user.id, guild, commands_)
 
         else:

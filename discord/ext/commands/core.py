@@ -1403,7 +1403,9 @@ class AppCommand(Command):
         args = ctx.args
         kwargs = ctx.kwargs
 
-        view_iterator = iter(ctx.interaction.data['options'])
+        view_iterator = (iter(ctx.options_passed)
+                         if ctx.options_passed else
+                         iter(ctx.interaction.data['options']))
         iterator = iter(self.params.items())
 
         if self.cog is not None:
@@ -1586,7 +1588,7 @@ class AppCommand(Command):
         # since we're in a regular command (and not a group) then
         # the invoked subcommand is None.)
         ctx.invoked_subcommand = None
-        ctx.subcommand_passed = None
+        ctx.options_passed = None
         injected = hooked_wrapped_callback(self, ctx, self.callback)
         await injected(*ctx.args, **ctx.kwargs)
 
@@ -2192,14 +2194,28 @@ class AppGroup(GroupMixin, AppCommand):
             await super().invoke(ctx)
 
     async def invoke(self, ctx: InteractionContext) -> None:
-        #ToDo Work on group invoke
+        #ToDo Try to clean up mess with options
+
+        opt = ctx.options_passed
         ctx.invoked_subcommand = None
-        ctx.subcommand_passed = None
+        ctx.options_passed = None
         early_invoke = not self.invoke_without_command
         if early_invoke:
             await self.prepare(ctx)
-        injected = hooked_wrapped_callback(self, ctx, self.callback)
-        await injected(*ctx.args, **ctx.kwargs)
+
+        options = ctx.interaction.data['options'] if not opt else opt
+        if options[0]['type'] < 3:
+            ctx.options_passed = options[0]['options']
+            ctx.invoked_subcommand = self.all_app_commands.get(options[0]['name'], None)
+
+        if early_invoke:
+            injected = hooked_wrapped_callback(self, ctx, self.callback)
+            await injected(*ctx.args, **ctx.kwargs)
+
+        ctx.invoked_parents.append(options[0]['name'])  # type: ignore
+
+        if ctx.invoked_subcommand:
+            await ctx.invoked_subcommand.invoke(ctx)
 
     async def reinvoke(self, ctx: Context, *, call_hooks: bool = False) -> None:
         ctx.invoked_subcommand = None
@@ -2897,7 +2913,7 @@ def dm_only() -> Callable[[T], T]:
     .. versionadded:: 1.1
     """
 
-    def predicate(ctx: Union[Context, InteractionContext]) -> bool:
+    def predicate(ctx: Context) -> bool:
         if ctx.guild is not None:
             raise PrivateMessageOnly()
         return True
@@ -2913,7 +2929,7 @@ def guild_only() -> Callable[[T], T]:
     that is inherited from :exc:`.CheckFailure`.
     """
 
-    def predicate(ctx: Union[Context, InteractionContext]) -> bool:
+    def predicate(ctx: Context) -> bool:
         if ctx.guild is None:
             raise NoPrivateMessage()
         return True

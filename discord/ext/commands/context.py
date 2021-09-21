@@ -429,8 +429,6 @@ class InteractionContext:
         This is only of use for within converters.
     command: Optional[:class:`AppCommand`]
         The application command that is being invoked currently.
-    invoked_with: Optional[:class:`str`]
-        The application command name that triggered this invocation.
     invoked_parents: List[:class:`str`]
         The command names of the parents that triggered this invocation.
 
@@ -438,11 +436,9 @@ class InteractionContext:
     invoked_subcommand: Optional[:class:`Command`]
         The application subcommand that was invoked.
         If no valid application subcommand was invoked then this is equal to ``None``.
-    subcommand_passed: Optional[:class:`str`]
-        The string that was attempted to call a application subcommand. This does not have
-        to point to a valid registered subcommand and could just point to a
-        nonsense string. If nothing was passed to attempt a call to a
-        subcommand then this is set to ``None``.
+    options_passed: Optional[:class:`Dict`]
+        The options that where used to call a application subcommand. If nothing
+        was passed to attempt a call to a subcommand then this is set to ``None``.
     command_failed: :class:`bool`
         A boolean that indicates if the command failed to be parsed, checked,
         or invoked.
@@ -458,7 +454,7 @@ class InteractionContext:
                  command: Optional[AppCommand] = None,
                  invoked_parents: List[str] = MISSING,
                  invoked_subcommand: Optional[AppCommand] = None,
-                 subcommand_passed: Optional[str] = None,
+                 options_passed: Optional[Dict] = None,
                  command_failed: bool = False,
                  current_parameter: Optional[inspect.Parameter] = None,
                  ):
@@ -470,7 +466,7 @@ class InteractionContext:
         self.command: Optional[AppCommand] = command
         self.invoked_parents: List[str] = invoked_parents or []
         self.invoked_subcommand: Optional[AppCommand] = invoked_subcommand
-        self.subcommand_passed: Optional[str] = subcommand_passed
+        self.options_passed: Optional[str] = options_passed
         self.command_failed: bool = command_failed
         self.current_parameter: Optional[inspect.Parameter] = current_parameter
         self._state: ConnectionState = self.interaction._state
@@ -641,6 +637,7 @@ class InteractionContext:
 
     async def reply(self, content: Optional[str] = None, **kwargs: Any) -> Message:
         #ToDo Docs
+        #ToDo Make command send a followup when not invoked_without_command
         return await self.interaction.response.send_message(content, **kwargs)
 
     async def send(self, content: Optional[str] = None, **kwargs: Any) -> Message:
