@@ -133,6 +133,25 @@ Command
     .. automethod:: Command.error()
         :decorator:
 
+AppCommand
+~~~~~~~~~
+
+.. attributetable:: discord.ext.commands.AppCommand
+
+.. autoclass:: discord.ext.commands.AppCommand
+    :members:
+    :special-members: __call__
+    :exclude-members: after_invoke, before_invoke, error
+
+    .. automethod:: AppCommand.after_invoke()
+        :decorator:
+
+    .. automethod:: AppCommand.before_invoke()
+        :decorator:
+
+    .. automethod:: AppCommand.error()
+        :decorator:
+
 Group
 ~~~~~~
 
@@ -156,6 +175,31 @@ Group
         :decorator:
 
     .. automethod:: Group.group(*args, **kwargs)
+        :decorator:
+
+AppGroup
+~~~~~~
+
+.. attributetable:: discord.ext.commands.AppGroup
+
+.. autoclass:: discord.ext.commands.AppGroup
+    :members:
+    :inherited-members:
+    :exclude-members: after_invoke, before_invoke, command, error, group
+
+    .. automethod:: AppGroup.after_invoke()
+        :decorator:
+
+    .. automethod:: AppGroup.before_invoke()
+        :decorator:
+
+    .. automethod:: AppGroup.command(*args, **kwargs)
+        :decorator:
+
+    .. automethod:: AppGroup.error()
+        :decorator:
+
+    .. automethod:: AppGroup.group(*args, **kwargs)
         :decorator:
 
 GroupMixin
