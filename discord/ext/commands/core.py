@@ -1079,7 +1079,9 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 
         return ' '.join(result)
 
-    async def can_run(self, ctx: Context) -> bool:
+    async def can_run(self, ctx: Union[Context, InteractionContext]) -> bool:
+        #ToDo Maybe move to AppCommand (own can_run)
+        #ToDo Docs
         """|coro|
 
         Checks if the command can be executed by checking all the predicates

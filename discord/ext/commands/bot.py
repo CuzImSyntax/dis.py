@@ -203,6 +203,30 @@ class BotBase(GroupMixin):
 
     # global check registration
 
+    async def on_app_command_error(self, context: InteractionContext, exception: errors.CommandError) -> None:
+        """|coro|
+
+        The default application command error handler provided by the bot.
+
+        By default this prints to :data:`sys.stderr` however it could be
+        overridden to have a different implementation.
+
+        This only fires if you do not specify any listeners for command error.
+        """
+        if self.extra_events.get('on_app_command_error', None):
+            return
+
+        command = context.command
+        if command and command.has_error_handler():
+            return
+
+        cog = context.cog
+        if cog and cog.has_error_handler():
+            return
+
+        print(f'Ignoring exception in command {context.command}:', file=sys.stderr)
+        traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
+
     def check(self, func: T) -> T:
         r"""A decorator that adds a global check to the bot.
 
@@ -1164,7 +1188,6 @@ class BotBase(GroupMixin):
             for name, param in command.clean_params.items():
                 type_ = self.type_dict.get(param.annotation, 3)
                 # ToDo implement choices
-                # ToDo implement options -> only if command is group
                 option = ApplicationCommandOption(type=type_, name=name,
                                                   description=command.arg_descriptions.get(name, "-"),
                                                   required=param.default is param.empty)
