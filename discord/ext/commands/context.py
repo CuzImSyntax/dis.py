@@ -49,6 +49,7 @@ if TYPE_CHECKING:
     from .core import Command, AppCommand
     from .help import HelpCommand
     from .view import StringView
+    from discord.utils import copy_doc
 
 __all__ = (
     'Context',
@@ -636,10 +637,193 @@ class InteractionContext:
             await cmd.on_help_command_error(self, e)
 
     async def reply(self, content: Optional[str] = None, **kwargs: Any) -> Message:
-        #ToDo Docs
-        #ToDo Make command send a followup when not invoked_without_command
+        """|coro|
+
+        Sends a message to the given interaction.
+
+        The content must be a type that can convert to a string through ``str(content)``.
+        If the content is set to ``None`` (the default), then the ``embed`` parameter must
+        be provided.
+
+        To upload a single file, the ``file`` parameter should be used with a
+        single :class:`~discord.File` object. To upload multiple files, the ``files``
+        parameter should be used with a :class:`list` of :class:`~discord.File` objects.
+        **Specifying both parameters will lead to an exception**.
+
+        To upload a single embed, the ``embed`` parameter should be used with a
+        single :class:`~discord.Embed` object. To upload multiple embeds, the ``embeds``
+        parameter should be used with a :class:`list` of :class:`~discord.Embed` objects.
+        **Specifying both parameters will lead to an exception**.
+
+        Parameters
+        ------------
+        content: Optional[:class:`str`]
+            The content of the message to send.
+        tts: :class:`bool`
+            Indicates if the message should be sent using text-to-speech.
+        embed: :class:`~discord.Embed`
+            The rich embed for the content.
+        file: :class:`~discord.File`
+            The file to upload.
+        files: List[:class:`~discord.File`]
+            A list of files to upload. Must be a maximum of 10.
+        nonce: :class:`int`
+            The nonce to use for sending this message. If the message was successfully sent,
+            then the message will have a nonce with this value.
+        delete_after: :class:`float`
+            If provided, the number of seconds to wait in the background
+            before deleting the message we just sent. If the deletion fails,
+            then it is silently ignored.
+        allowed_mentions: :class:`~discord.AllowedMentions`
+            Controls the mentions being processed in this message. If this is
+            passed, then the object is merged with :attr:`~discord.Client.allowed_mentions`.
+            The merging behaviour only overrides attributes that have been explicitly passed
+            to the object, otherwise it uses the attributes set in :attr:`~discord.Client.allowed_mentions`.
+            If no object is passed at all then the defaults given by :attr:`~discord.Client.allowed_mentions`
+            are used instead.
+
+            .. versionadded:: 1.4
+
+        reference: Union[:class:`~discord.Message`, :class:`~discord.MessageReference`, :class:`~discord.PartialMessage`]
+            A reference to the :class:`~discord.Message` to which you are replying, this can be created using
+            :meth:`~discord.Message.to_reference` or passed directly as a :class:`~discord.Message`. You can control
+            whether this mentions the author of the referenced message using the :attr:`~discord.AllowedMentions.replied_user`
+            attribute of ``allowed_mentions`` or by setting ``mention_author``.
+
+            .. versionadded:: 1.6
+
+        mention_author: Optional[:class:`bool`]
+            If set, overrides the :attr:`~discord.AllowedMentions.replied_user` attribute of ``allowed_mentions``.
+
+            .. versionadded:: 1.6
+        view: :class:`discord.ui.View`
+            A Discord UI View to add to the message.
+        embeds: List[:class:`~discord.Embed`]
+            A list of embeds to upload. Must be a maximum of 10.
+
+            .. versionadded:: 2.0
+        stickers: Sequence[Union[:class:`~discord.GuildSticker`, :class:`~discord.StickerItem`]]
+            A list of stickers to upload. Must be a maximum of 3.
+
+            .. versionadded:: 2.0
+
+        Raises
+        --------
+        ~discord.HTTPException
+            Sending the message failed.
+        ~discord.Forbidden
+            You do not have the proper permissions to send the message.
+        ~discord.InvalidArgument
+            The ``files`` list is not of the appropriate size,
+            you specified both ``file`` and ``files``,
+            or you specified both ``embed`` and ``embeds``,
+            or the ``reference`` object is not a :class:`~discord.Message`,
+            :class:`~discord.MessageReference` or :class:`~discord.PartialMessage`.
+        ~discord.InteractionResponded
+            You already responded to the interaction.
+
+        Returns
+        ---------
+        :class:`~discord.Message`
+            The message that was sent.
+        """
+
         return await self.interaction.response.send_message(content, **kwargs)
 
+    async def reply_followup(self, content: Optional[str] = None, **kwargs: Any) -> Message:
+        """|coro|
+
+        Sends a followup message to the given interaction.
+
+        The content must be a type that can convert to a string through ``str(content)``.
+        If the content is set to ``None`` (the default), then the ``embed`` parameter must
+        be provided.
+
+        To upload a single file, the ``file`` parameter should be used with a
+        single :class:`~discord.File` object. To upload multiple files, the ``files``
+        parameter should be used with a :class:`list` of :class:`~discord.File` objects.
+        **Specifying both parameters will lead to an exception**.
+
+        To upload a single embed, the ``embed`` parameter should be used with a
+        single :class:`~discord.Embed` object. To upload multiple embeds, the ``embeds``
+        parameter should be used with a :class:`list` of :class:`~discord.Embed` objects.
+        **Specifying both parameters will lead to an exception**.
+
+        Parameters
+        ------------
+        content: Optional[:class:`str`]
+            The content of the message to send.
+        tts: :class:`bool`
+            Indicates if the message should be sent using text-to-speech.
+        embed: :class:`~discord.Embed`
+            The rich embed for the content.
+        file: :class:`~discord.File`
+            The file to upload.
+        files: List[:class:`~discord.File`]
+            A list of files to upload. Must be a maximum of 10.
+        nonce: :class:`int`
+            The nonce to use for sending this message. If the message was successfully sent,
+            then the message will have a nonce with this value.
+        delete_after: :class:`float`
+            If provided, the number of seconds to wait in the background
+            before deleting the message we just sent. If the deletion fails,
+            then it is silently ignored.
+        allowed_mentions: :class:`~discord.AllowedMentions`
+            Controls the mentions being processed in this message. If this is
+            passed, then the object is merged with :attr:`~discord.Client.allowed_mentions`.
+            The merging behaviour only overrides attributes that have been explicitly passed
+            to the object, otherwise it uses the attributes set in :attr:`~discord.Client.allowed_mentions`.
+            If no object is passed at all then the defaults given by :attr:`~discord.Client.allowed_mentions`
+            are used instead.
+
+            .. versionadded:: 1.4
+
+        reference: Union[:class:`~discord.Message`, :class:`~discord.MessageReference`, :class:`~discord.PartialMessage`]
+            A reference to the :class:`~discord.Message` to which you are replying, this can be created using
+            :meth:`~discord.Message.to_reference` or passed directly as a :class:`~discord.Message`. You can control
+            whether this mentions the author of the referenced message using the :attr:`~discord.AllowedMentions.replied_user`
+            attribute of ``allowed_mentions`` or by setting ``mention_author``.
+
+            .. versionadded:: 1.6
+
+        mention_author: Optional[:class:`bool`]
+            If set, overrides the :attr:`~discord.AllowedMentions.replied_user` attribute of ``allowed_mentions``.
+
+            .. versionadded:: 1.6
+        view: :class:`discord.ui.View`
+            A Discord UI View to add to the message.
+        embeds: List[:class:`~discord.Embed`]
+            A list of embeds to upload. Must be a maximum of 10.
+
+            .. versionadded:: 2.0
+        stickers: Sequence[Union[:class:`~discord.GuildSticker`, :class:`~discord.StickerItem`]]
+            A list of stickers to upload. Must be a maximum of 3.
+
+            .. versionadded:: 2.0
+
+        Raises
+        --------
+        ~discord.HTTPException
+            Sending the message failed.
+        ~discord.Forbidden
+            You do not have the proper permissions to send the message.
+        ~discord.InvalidArgument
+            The ``files`` list is not of the appropriate size,
+            you specified both ``file`` and ``files``,
+            or you specified both ``embed`` and ``embeds``,
+            or the ``reference`` object is not a :class:`~discord.Message`,
+            :class:`~discord.MessageReference` or :class:`~discord.PartialMessage`.
+        ~discord.NotFound
+            No existing webhook as there was no response to the interaction.
+
+        Returns
+        ---------
+        :class:`~discord.Message`
+            The message that was sent.
+        """
+
+        return await self.interaction.followup.send(content, **kwargs)
+
+    @discord.utils.copy_doc(discord.abc.Messageable.send)
     async def send(self, content: Optional[str] = None, **kwargs: Any) -> Message:
-        #ToDo Docs
         return await self.channel.send(content, **kwargs)
