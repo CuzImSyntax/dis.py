@@ -13,10 +13,12 @@ dis.py
 
 A modern, easy to use, feature-rich, and async ready API wrapper for Discord written in Python.
 
-The Future of discord.py
+Why dis.py?
 --------------------------
 
-Please read the `gist <https://gist.github.com/CuzImSyntax/4a2f62751b9600a31a0d3c78100287f1>`_ for the future of this project. It's been a good one.
+discord.py currently got disconnected due to multiple reasons. Read this `gist <https://gist.github.com/CuzImSyntax/4a2f62751b9600a31a0d3c78100287f1>`_ for more information.
+
+dis.py is a fork of discord.py implementing discords new possibilities for devs such as application commands.
 
 Key Features
 -------------
@@ -117,6 +119,6 @@ Links
 ------
 Warning: This is currently still pointing to the old discord.py links and will be updated soon
 
-- `Documentation <https://discordpy.readthedocs.io/en/latest/index.html>`_
-- `Official Discord Server <https://discord.gg/r3sSKJJ>`_
+- `Documentation <https://dispy.readthedocs.io/en/latest/index.html>`_
+- `Official Discord Server Not available`_
 - `Discord API <https://discord.gg/discord-api>`_
