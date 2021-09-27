@@ -1188,6 +1188,7 @@ class BotBase(GroupMixin):
             for name, param in command.clean_params.items():
                 type_ = self.type_dict.get(param.annotation, 3)
                 # ToDo implement choices
+
                 option = ApplicationCommandOption(type=type_, name=name,
                                                   description=command.arg_descriptions.get(name, "-"),
                                                   required=param.default is param.empty)
@@ -1250,9 +1251,11 @@ class Bot(BotBase, discord.Client):
         you require group commands to be case insensitive as well.
     description: :class:`str`
         The content prefixed into the default help message.
-    testing_guild Optional[:class:`int`]
+    testing_guild: Optional[:class:`int`]
         When set, application commands will only be updated / registered on the given guild, helpful for testing
         application commands
+
+        .. versionadded:: 2.0
     help_command: Optional[:class:`.HelpCommand`]
         The help command implementation to use. This can be dynamically
         set at runtime. To remove the help command pass ``None``. For more
@@ -1289,6 +1292,7 @@ class Bot(BotBase, discord.Client):
                 command_ = await self.convert_app_command(command)
                 if not command.guilds:
                     global_overwrites.append(command_)
+                    registered_commands.remove(command.name)
                 else:
                     for guild_id in command.guilds:
                         data = guild_commands.get(guild_id, list())
