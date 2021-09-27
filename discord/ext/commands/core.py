@@ -1139,6 +1139,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 class AppCommand(Command):
     #ToDo Look into Docs, for spellings, etc, bsp: error wrong naming in docs
     #ToDo Also for Groups
+    #ToDo Add possibility to use discords permissions system
     r"""A class that implements the protocol for a bot application command.
 
     These are not created manually, instead they are created via the
@@ -1191,18 +1192,17 @@ class AppCommand(Command):
         If ``True``\, cooldown processing is done after argument parsing,
         which calls converters. If ``False`` then cooldown processing is done
         first and then the converters are called second. Defaults to ``False``.
-    type :class:`int`
+    type: :class:`int`
         The app commands type
-    arg_descriptions :class:`Dict`
+    arg_descriptions: :class:`Dict`
         The descriptions used in discord for command options.
+
     extras: :class:`dict`
         A dict of user provided extras to attach to the Command.
 
         .. note::
             This object may be copied by the library.
 
-
-        .. versionadded:: 2.0
     """
     __original_kwargs__: Dict[str, Any]
 
@@ -2152,49 +2152,18 @@ class AppGroup(GroupMixin, AppCommand):
         self.invoke_without_command: bool = attrs.pop('invoke_without_command', False)
         super().__init__(*args, **attrs)
 
-    def copy(self: GroupT) -> GroupT:
-        """Creates a copy of this :class:`Group`.
+    def copy(self: AppGroupT) -> AppGroupT:
+        """Creates a copy of this :class:`AppGroup`.
 
         Returns
         --------
-        :class:`Group`
+        :class:`AppGroup`
             A new instance of this group.
         """
         ret = super().copy()
         for cmd in self.app_commands:
             ret.add_app_command(cmd.copy())
         return ret  # type: ignore
-
-    async def invoke_old(self, ctx: Context) -> None:
-        ctx.invoked_subcommand = None
-        ctx.subcommand_passed = None
-        early_invoke = not self.invoke_without_command
-        if early_invoke:
-            await self.prepare(ctx)
-
-        view = ctx.view
-        previous = view.index
-        view.skip_ws()
-        trigger = view.get_word()
-
-        if trigger:
-            ctx.subcommand_passed = trigger
-            ctx.invoked_subcommand = self.all_commands.get(trigger, None)
-
-        if early_invoke:
-            injected = hooked_wrapped_callback(self, ctx, self.callback)
-            await injected(*ctx.args, **ctx.kwargs)
-
-        ctx.invoked_parents.append(ctx.invoked_with)  # type: ignore
-
-        if trigger and ctx.invoked_subcommand:
-            ctx.invoked_with = trigger
-            await ctx.invoked_subcommand.invoke(ctx)
-        elif not early_invoke:
-            # undo the trigger parsing
-            view.index = previous
-            view.previous = previous
-            await super().invoke(ctx)
 
     async def invoke(self, ctx: InteractionContext) -> None:
         #ToDo Try to clean up mess with options
@@ -2221,6 +2190,7 @@ class AppGroup(GroupMixin, AppCommand):
             await ctx.invoked_subcommand.invoke(ctx)
 
     async def reinvoke(self, ctx: Context, *, call_hooks: bool = False) -> None:
+        #ToDo do we need this
         ctx.invoked_subcommand = None
         early_invoke = not self.invoke_without_command
         if early_invoke:
