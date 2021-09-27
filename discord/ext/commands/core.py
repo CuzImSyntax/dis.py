@@ -1137,7 +1137,8 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 
 
 class AppCommand(Command):
-    #ToDO Add invoked_with, so subcommands will get executed correct
+    #ToDo Look into Docs, for spellings, etc, bsp: error wrong naming in docs
+    #ToDo Also for Groups
     r"""A class that implements the protocol for a bot application command.
 
     These are not created manually, instead they are created via the
