@@ -1292,7 +1292,6 @@ class Bot(BotBase, discord.Client):
                 command_ = await self.convert_app_command(command)
                 if not command.guilds:
                     global_overwrites.append(command_)
-                    registered_commands.remove(command.name)
                 else:
                     for guild_id in command.guilds:
                         data = guild_commands.get(guild_id, list())
