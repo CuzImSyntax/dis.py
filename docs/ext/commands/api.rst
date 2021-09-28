@@ -114,6 +114,12 @@ Decorators
 .. autofunction:: discord.ext.commands.group
     :decorator:
 
+.. autofunction:: discord.ext.commands.slash_command
+    :decorator:
+
+.. autofunction:: discord.ext.commands.slash_group
+    :decorator:
+
 Command
 ~~~~~~~~~
 
