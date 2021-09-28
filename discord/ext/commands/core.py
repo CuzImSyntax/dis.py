@@ -77,9 +77,9 @@ __all__ = (
     'AppGroup',
     'GroupMixin',
     'command',
-    'slash_command',
+    'app_command',
     'group',
-    'slash_group',
+    'app_group',
     'has_role',
     'has_permissions',
     'has_any_role',
@@ -1923,14 +1923,14 @@ class GroupMixin(Generic[CogT]):
 
         return decorator
 
-    def slash_command(
+    def app_command(
         self,
         name: str = MISSING,
         cls: Type[AppCommandT] = MISSING,
         *args: Any,
         **kwargs: Any,
     ) -> Callable[[Callable[Concatenate[ContextT, P], Coro[Any]]], AppCommandT]:
-        """A shortcut decorator that invokes :func:`.slash_command` and adds it to
+        """A shortcut decorator that invokes :func:`.app_command` and adds it to
         the internal command list via :meth:`~.GroupMixin.add_app_command`.
 
         Returns
@@ -1940,7 +1940,7 @@ class GroupMixin(Generic[CogT]):
         """
         def decorator(func: Callable[Concatenate[ContextT, P], Coro[Any]]) -> CommandT:
             kwargs.setdefault('parent', self)
-            result = slash_command(name=name, cls=cls, *args, **kwargs)(func)
+            result = app_command(name=name, cls=cls, *args, **kwargs)(func)
             self.add_app_command(result)
             return result
 
@@ -1994,7 +1994,7 @@ class GroupMixin(Generic[CogT]):
 
         return decorator
 
-    def slash_group(
+    def app_group(
         self,
         name: str = MISSING,
         cls: Type[AppGroupT] = MISSING,
@@ -2011,7 +2011,7 @@ class GroupMixin(Generic[CogT]):
         """
         def decorator(func: Callable[Concatenate[ContextT, P], Coro[Any]]) -> GroupT:
             kwargs.setdefault('parent', self)
-            result = slash_group(name=name, cls=cls, *args, **kwargs)(func)
+            result = app_group(name=name, cls=cls, *args, **kwargs)(func)
             self.add_app_command(result)
             return result
 
@@ -2316,7 +2316,7 @@ def command(
 
     return decorator
 
-def slash_command(
+def app_command(
     name: str = MISSING,
     cls: Type[AppCommandT] = MISSING,
     **attrs: Any,
@@ -2427,7 +2427,7 @@ def group(
         cls = Group  # type: ignore
     return command(name=name, cls=cls, **attrs)  # type: ignore
 
-def slash_group(
+def app_group(
     name: str = MISSING,
     cls: Type[GroupT] = MISSING,
     **attrs: Any,
@@ -2441,7 +2441,7 @@ def slash_group(
 , Union[ApplicatioGroup[CogT, P, T], AppGroupT]]:
     """A decorator that transforms a function into a :class:`.AppGroup`.
 
-    This is similar to the :func:`.slash_command` decorator but the ``cls``
+    This is similar to the :func:`.app_command` decorator but the ``cls``
     parameter is set to :class:`AppGroup` by default.
 
     .. versionchanged:: 1.1
@@ -2449,7 +2449,7 @@ def slash_group(
     """
     if cls is MISSING:
         cls = AppGroup  # type: ignore
-    return slash_command(name=name, cls=cls, **attrs)  # type: ignore
+    return app_command(name=name, cls=cls, **attrs)  # type: ignore
 
 
 def check(predicate: Check) -> Callable[[T], T]:
