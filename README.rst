@@ -113,6 +113,23 @@ Bot Example
 
     bot.run('token')
 
+Slash Example
+~~~~~~~~~~~~~
+
+.. code:: py
+
+    import discord
+    from discord.ext import commands
+
+    # We still need to set a prefix, as normal commands will also work.
+    bot = commands.Bot(command_prefix='>')
+
+    @bot.slash_command(description="Simple ping command.")
+    async def ping(ctx):
+        await ctx.reply('pong')
+
+    bot.run('token')
+
 You can find more examples in the examples directory.
 
 Links
@@ -120,5 +137,5 @@ Links
 Warning: This is currently still pointing to the old discord.py links and will be updated soon
 
 - `Documentation <https://dispy.readthedocs.io/en/latest/index.html>`_
-- `Official Discord Server Not available`_
+-  Official Discord Server Not available
 - `Discord API <https://discord.gg/discord-api>`_
