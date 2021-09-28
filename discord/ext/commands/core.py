@@ -1243,10 +1243,15 @@ class AppCommand(Command):
         self.usage: Optional[str] = kwargs.get('usage')
         self.extras: Dict[str, Any] = kwargs.get('extras', {})
 
+        description = kwargs.get('description')
+        if description is not None:
+            description = inspect.cleandoc(description)
+        else:
+            description = inspect.getdoc(func)
+            if isinstance(description, bytes):
+                description = description.decode('utf-8')
 
-        self.description: str = kwargs.get("description") or (
-                                inspect.cleandoc(kwargs.get('description', ''))
-                                if func.__doc__ else "No description provided.")
+        self.description: str = description
 
         try:
             checks = func.__commands_checks__
@@ -2177,7 +2182,9 @@ class AppGroup(GroupMixin, AppCommand):
 
         options = ctx.interaction.data['options'] if not opt else opt
         if options[0]['type'] < 3:
-            ctx.options_passed = options[0]['options']
+            #ToDo check when no arguments are passed
+            ctx.options_passed = options[0].get('options', None)
+            print(ctx.options_passed)
             ctx.invoked_subcommand = self.all_app_commands.get(options[0]['name'], None)
 
         if early_invoke:
