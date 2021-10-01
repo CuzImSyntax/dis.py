@@ -1148,7 +1148,8 @@ class BotBase(GroupMixin):
         await self.process_commands(message)
 
     async def on_interaction(self, interaction):
-        await self.process_app_commands(interaction)
+        if interaction.type == discord.InteractionType.application_command:
+            await self.process_app_commands(interaction)
 
     type_dict = {
         "sub_command": 1,
