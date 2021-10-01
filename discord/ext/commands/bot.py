@@ -1168,6 +1168,7 @@ class BotBase(GroupMixin):
     }
 
     def get_command_options(self, command: AppCommand):
+        #ToDo Make this faster (unwrap whole group at once) as this seems inefficient
         options = []
 
         if isinstance(command, AppGroup):
@@ -1293,6 +1294,7 @@ class Bot(BotBase, discord.Client):
                 command_ = await self.convert_app_command(command)
                 if not command.guilds:
                     global_overwrites.append(command_)
+                    # ToDo registered_commands.remove(command.name)
                 else:
                     for guild_id in command.guilds:
                         data = guild_commands.get(guild_id, list())
@@ -1300,13 +1302,17 @@ class Bot(BotBase, discord.Client):
                         guild_commands[guild_id] = data
 
             await self.http.bulk_upsert_global_commands(self.user.id, global_overwrites)
-            for guild, commands_ in guild_commands.items():
 
-                await self.http.bulk_upsert_guild_commands(self.user.id, guild, commands_)
+            for guild, guild_commands_ in guild_commands.items():
+                await self.http.bulk_upsert_guild_commands(self.user.id, guild, guild_commands_)
 
+        #If there is a testing guild, we just ubsert all commands on this guild
         else:
-            # ToDo only update / register command in guild
-            print("Updating app commands only on testing guild")
+            overwrites = []
+            for command in self.app_commands:
+                command_ = await self.convert_app_command(command)
+                overwrites.append(command_)
+            await self.http.bulk_upsert_guild_commands(self.user.id, self.testing_guild, overwrites)
 
     async def on_connect(self):
         await self.register_app_commands()
