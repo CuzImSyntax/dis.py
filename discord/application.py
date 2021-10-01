@@ -232,8 +232,7 @@ class ApplicationCommand(Hashable):
 
     def _from_data(self, applicationcommand: ApplicationCommandPayload) -> None:
         self.id: int = int(applicationcommand['id'])
-        self.type: ApplicationCommandType = try_enum(ApplicationCommandType,
-                                                      applicationcommand.get('type'))
+        self.type: ApplicationCommandType = try_enum(ApplicationCommandType, applicationcommand.get('type'))
         self.application_id: int = applicationcommand.get('application_id')
         self.guild_id: Optional[int] = applicationcommand.get('guild_id')
         self.name: str = applicationcommand.get('name')
