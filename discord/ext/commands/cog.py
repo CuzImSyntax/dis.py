@@ -258,7 +258,7 @@ class Cog(metaclass=CogMeta):
 
                 This does not include subcommands.
         """
-        return [c for c in self.__cog_app_commands__ if c.parent is None]
+        return [c for c in self.__cog_commands__ if c.parent is None]
 
     def get_app_commands(self) -> List[Command]:
         r"""
