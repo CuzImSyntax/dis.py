@@ -1674,6 +1674,36 @@ class Client:
 
         self._connection.store_view(view, message_id)
 
+    def remove_view(self, view: View) -> None:
+        """Removes a :class:`~discord.ui.View` from persistent listening.
+
+        This method should be used for when a view is comprised of components
+        that last longer than the lifecycle of the program.
+
+        .. versionadded:: 2.0
+
+        Parameters
+        ------------
+        view: :class:`discord.ui.View`
+            The view to remove from dispatching.
+
+        Raises
+        -------
+        TypeError
+            A view was not passed.
+        ValueError
+            The view is not persistent. A persistent view has no timeout
+            and all their components have an explicitly provided custom_id.
+        """
+
+        if not isinstance(view, View):
+            raise TypeError(f'expected an instance of View not {view.__class__!r}')
+
+        if not view.is_persistent():
+            raise ValueError('View is not persistent. Items need to have a custom_id set and View must have no timeout')
+
+        self._connection.remove_view(view)
+
     @property
     def persistent_views(self) -> Sequence[View]:
         """Sequence[:class:`.View`]: A sequence of persistent views added to the client.

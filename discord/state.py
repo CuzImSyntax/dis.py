@@ -362,6 +362,9 @@ class ConnectionState:
     def store_view(self, view: View, message_id: Optional[int] = None) -> None:
         self._view_store.add_view(view, message_id)
 
+    def remove_view(self, view: View) -> None:
+        self._view_store.remove_view(view)
+
     def prevent_view_updates_for(self, message_id: int) -> Optional[View]:
         return self._view_store.remove_message_tracking(message_id)
 
