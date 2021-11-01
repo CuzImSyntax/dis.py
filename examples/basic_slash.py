@@ -3,6 +3,7 @@
 import discord
 from discord.ext import commands
 import random
+import typing
 
 #Important!! When using slash commands, arguments should always be typehinted.
 
@@ -84,5 +85,13 @@ async def cool(ctx):
 async def _bot(ctx):
     """Is the bot cool?"""
     await ctx.reply('Yes, the bot is cool.')
+
+
+@bot.slash_command(name="animal",
+                   description="Pick your favorite Animal from a given list.",
+                   arg_description={"animal": "Choose your favorite animal."})
+async def _animal(ctx, animal: typing.Literal["Cat", "Dog", "Lion", "Elephant"]):
+    #With a Literal, you can give users choices, to choose from
+    await ctx.reply(f"Oh cool, my favorite animal is the {animal} too.")
 
 bot.run("token")
