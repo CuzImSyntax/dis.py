@@ -1250,6 +1250,8 @@ class AppCommand(Command):
             description = inspect.getdoc(func)
             if isinstance(description, bytes):
                 description = description.decode('utf-8')
+        if not description:
+            description = "-"
 
         self.description: str = description
 
