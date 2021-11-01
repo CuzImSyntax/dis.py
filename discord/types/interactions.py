@@ -25,6 +25,8 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING, Dict, TypedDict, Union, List, Literal
+
+import discord.types.channel
 from .snowflake import Snowflake
 from .components import Component, ComponentType
 from .embed import Embed
@@ -56,6 +58,8 @@ class _ApplicationCommandOptionOptional(TypedDict, total=False):
     choices: List[ApplicationCommandOptionChoice]
     options: List[ApplicationCommandOption]
     required: bool
+    channel_types: List[discord.types.channel.ChannelType]
+    autocomplete: bool
 
 
 ApplicationCommandOptionType = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
