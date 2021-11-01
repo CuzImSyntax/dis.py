@@ -34,7 +34,8 @@ import logging
 import sys
 import traceback
 import types
-from typing import Any, Callable, Mapping, List, Dict, TYPE_CHECKING, Optional, TypeVar, Type, Union
+import typing
+from typing import Any, Callable, Mapping, List, Dict, TYPE_CHECKING, Optional, TypeVar, Type, Union, Literal
 
 import discord
 
@@ -44,7 +45,7 @@ from .context import Context, InteractionContext
 from . import errors
 from .help import HelpCommand, DefaultHelpCommand
 from .cog import Cog
-from ...types.interactions import ApplicationCommandOption, EditApplicationCommand
+from ...types.interactions import ApplicationCommandOption, ApplicationCommandOptionChoice, EditApplicationCommand
 
 if TYPE_CHECKING:
     import importlib.machinery
@@ -1167,6 +1168,12 @@ class BotBase(GroupMixin):
         float: 10
     }
 
+    channel_types_dict = {
+        discord.channel.TextChannel: 0,
+        discord.channel.VoiceChannel: 2,
+        discord.channel.StageChannel: 13
+    }
+
     def get_command_options(self, command: AppCommand):
         #ToDo Make this faster (unwrap whole group at once) as this seems inefficient
         options = []
@@ -1188,12 +1195,23 @@ class BotBase(GroupMixin):
 
         else:
             for name, param in command.clean_params.items():
-                type_ = self.type_dict.get(param.annotation, 3)
-                # ToDo implement choices
-
+                choices = []
+                channel_types = []
+                #When annotation is a Literal, we want to use those as Choices
+                if isinstance(param.annotation, typing._GenericAlias):
+                    type_ = 3
+                    choices = [ApplicationCommandOptionChoice(name=item, value=item) for item in param.annotation.__args__]
+                else:
+                    type_ = self.type_dict.get(param.annotation, 3)
+                    #When the argument is a channel, we want to only show the hinted channel
+                    if issubclass(param.annotation, discord.abc.GuildChannel):
+                        channel_type = self.channel_types_dict.get(param.annotation, None)
+                        channel_types.append(channel_type)
                 option = ApplicationCommandOption(type=type_, name=name,
                                                   description=command.arg_descriptions.get(name, "-"),
-                                                  required=param.default is param.empty)
+                                                  required=param.default is param.empty,
+                                                  choices=choices if choices else None,
+                                                  channel_types = channel_types if channel_types else None)
 
                 options.append(option)
 
@@ -1306,7 +1324,7 @@ class Bot(BotBase, discord.Client):
             for guild, guild_commands_ in guild_commands.items():
                 await self.http.bulk_upsert_guild_commands(self.user.id, guild, guild_commands_)
 
-        #If there is a testing guild, we just ubsert all commands on this guild
+        #If there is a testing guild, we just upsert all commands on this guild
         else:
             overwrites = []
             for command in self.app_commands:
