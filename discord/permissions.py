@@ -50,6 +50,7 @@ P = TypeVar('P', bound='Permissions')
 
 @fill_with_flags()
 class Permissions(BaseFlags):
+    #ToDo Check if new permissions are working
     """Wraps up the Discord permission value.
 
     The properties provided are two way. You can set and retrieve individual
@@ -551,6 +552,23 @@ class Permissions(BaseFlags):
         """
         return 1 << 38
 
+    #ToDo look whether docs are correct
+    @flag_value
+    def start_embedded_activities(self) -> int:
+        """:class:`bool`: Returns ``True`` if a user can start embedded activities.
+
+        .. versionadded:: 2.0
+        """
+        return 1 << 39
+
+    @flag_value
+    def moderate_members(self) -> int:
+        """:class:`bool`: Returns ``True`` if a user can moderate members.
+
+        .. versionadded:: 2.0
+        """
+        return 1 << 40
+
 PO = TypeVar('PO', bound='PermissionOverwrite')
 
 def _augment_from_permissions(cls):
@@ -664,6 +682,8 @@ class PermissionOverwrite:
         send_messages_in_threads: Optional[bool]
         external_stickers: Optional[bool]
         use_external_stickers: Optional[bool]
+        start_embedded_activities: Optional[bool]
+        moderate_members: Optional[bool]
 
     def __init__(self, **kwargs: Optional[bool]):
         self._values: Dict[str, Optional[bool]] = {}
