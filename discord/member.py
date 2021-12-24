@@ -265,6 +265,7 @@ class Member(discord.abc.Messageable, _UserTag):
         '_user',
         '_state',
         '_avatar',
+        'communication_disabled_until'
     )
 
     if TYPE_CHECKING:
@@ -296,6 +297,7 @@ class Member(discord.abc.Messageable, _UserTag):
         self.nick: Optional[str] = data.get('nick', None)
         self.pending: bool = data.get('pending', False)
         self._avatar: Optional[str] = data.get('avatar')
+        self.communication_disabled_until : Optional[datetime.datetime] = utils.parse_time(data.get('communication_disabled_until'))
 
     def __str__(self) -> str:
         return str(self._user)
@@ -635,6 +637,7 @@ class Member(discord.abc.Messageable, _UserTag):
         await self.guild.kick(self, reason=reason)
 
     async def edit(
+            #ToDo Check if communication_disabled_until is working
         self,
         *,
         nick: Optional[str] = MISSING,
@@ -643,6 +646,7 @@ class Member(discord.abc.Messageable, _UserTag):
         suppress: bool = MISSING,
         roles: List[discord.abc.Snowflake] = MISSING,
         voice_channel: Optional[VocalGuildChannel] = MISSING,
+        communication_disabled_until: Optional[datetime.datetime] = MISSING,
         reason: Optional[str] = None,
     ) -> Optional[Member]:
         """|coro|
@@ -664,6 +668,8 @@ class Member(discord.abc.Messageable, _UserTag):
         +---------------+--------------------------------------+
         | voice_channel | :attr:`Permissions.move_members`     |
         +---------------+--------------------------------------+
+        | communication_disabled_until | :attr:`Permissions.moderate_members`     |
+        +---------------+--------------------------------------+
 
         All parameters are optional.
 
@@ -672,6 +678,9 @@ class Member(discord.abc.Messageable, _UserTag):
 
         .. versionchanged:: 2.0
             The newly member is now optionally returned, if applicable.
+
+        .. versionadded:: 2.0
+            Added the new communication_disabled_until option.
 
         Parameters
         -----------
@@ -693,6 +702,11 @@ class Member(discord.abc.Messageable, _UserTag):
             Pass ``None`` to kick them from voice.
         reason: Optional[:class:`str`]
             The reason for editing this member. Shows up on the audit log.
+        communication_disabled_until: Optional[:class:`datetime.datetime`}
+            Add a timeout to this member.
+
+            .. versionadded:: 2.0
+
 
         Raises
         -------
@@ -746,6 +760,9 @@ class Member(discord.abc.Messageable, _UserTag):
 
         if roles is not MISSING:
             payload['roles'] = tuple(r.id for r in roles)
+
+        if communication_disabled_until is not MISSING:
+            payload['communication_disabled_until'] = communication_disabled_until
 
         if payload:
             data = await http.edit_member(guild_id, self.id, reason=reason, **payload)
