@@ -30,6 +30,8 @@ import re
 
 from typing import Optional, TYPE_CHECKING
 
+import setuptools.wheel
+
 import discord.utils
 
 from .core import Group, Command
@@ -376,6 +378,7 @@ class HelpCommand:
         self._command_impl.remove_check(func)
 
     def get_bot_mapping(self):
+        #ToDo Make App commands working here
         """Retrieves the bot mapping passed to :meth:`send_bot_help`."""
         bot = self.context.bot
         mapping = {cog: cog.get_commands() for cog in bot.cogs.values()}
@@ -427,7 +430,7 @@ class HelpCommand:
             parent = parent.parent
         parent_sig = ' '.join(reversed(entries))
 
-        if len(command.aliases) > 0:
+        if hasattr(command, "aliases") and len(command.aliases) > 0:
             aliases = '|'.join(command.aliases)
             fmt = f'[{command.name}|{aliases}]'
             if parent_sig:
@@ -559,7 +562,8 @@ class HelpCommand:
         if sort and key is None:
             key = lambda c: c.name
 
-        iterator = commands if self.show_hidden else filter(lambda c: not c.hidden, commands)
+        iterator = commands if self.show_hidden else filter(lambda c: not c.hidden if hasattr(c, "hidden") else True,
+                                                            commands)
 
         if self.verify_checks is False:
             # if we do not need to verify the checks then we can just
@@ -1028,7 +1032,9 @@ class DefaultHelpCommand(HelpCommand):
             cog = command.cog
             return cog.qualified_name + ':' if cog is not None else no_category
 
-        filtered = await self.filter_commands(bot.commands, sort=True, key=get_category)
+        commands = set.union(bot.commands, bot.app_commands)
+        print(bot.app_commands)
+        filtered = await self.filter_commands(commands, sort=True, key=get_category)
         max_size = self.get_max_size(filtered)
         to_iterate = itertools.groupby(filtered, key=get_category)
 
