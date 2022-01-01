@@ -1254,6 +1254,7 @@ class AppCommand(Command):
             description = "-"
 
         self.description: str = description
+        self.help = self.description #Set this to make the help command work maybe rework in future
 
         try:
             checks = func.__commands_checks__
