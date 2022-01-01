@@ -438,8 +438,10 @@ class InteractionContext:
         The application subcommand that was invoked.
         If no valid application subcommand was invoked then this is equal to ``None``.
     options_passed: Optional[:class:`Dict`]
-        The options that where used to call a application subcommand. If nothing
+        The options that where used to call an application subcommand. If nothing
         was passed to attempt a call to a subcommand then this is set to ``None``.
+    clean_prefix: :class:`str`
+        The cleaned up invoke prefix.
     command_failed: :class:`bool`
         A boolean that indicates if the command failed to be parsed, checked,
         or invoked.
@@ -471,6 +473,7 @@ class InteractionContext:
         self.command_failed: bool = command_failed
         self.current_parameter: Optional[inspect.Parameter] = current_parameter
         self._state: ConnectionState = self.interaction._state
+        self.clean_prefix = "/" #Setting this to default / if we wanted to change this in the future
 
     async def invoke(self, command: AppCommand[CogT, P, T], /, *args: P.args, **kwargs: P.kwargs) -> T:
         r"""|coro|
@@ -614,12 +617,12 @@ class InteractionContext:
             return None
 
         try:
-            entity.qualified_name
+            entity.name
         except AttributeError:
             # if we're here then it's not a cog, group, or command.
             return None
 
-        await cmd.prepare_help_command(self, entity.qualified_name)
+        await cmd.prepare_help_command(self, entity.name)
 
         try:
             if hasattr(entity, '__cog_commands__'):
@@ -634,6 +637,7 @@ class InteractionContext:
             else:
                 return None
         except CommandError as e:
+            print(e)
             await cmd.on_help_command_error(self, e)
 
     async def reply(self, content: Optional[str] = None, **kwargs: Any) -> Message:
