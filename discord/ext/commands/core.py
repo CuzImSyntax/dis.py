@@ -1171,7 +1171,6 @@ class AppCommand(Command):
         :exc:`.CheckFailure` exception is raised to the :func:`.on_command_error`
         event.
     description: :class:`str`
-        The message prefixed into the default help command.
         The command's description, used in help and discords command description.
     rest_is_raw: :class:`bool`
         If ``False`` and a keyword-only argument is provided then the keyword
