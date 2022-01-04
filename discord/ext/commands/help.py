@@ -68,7 +68,6 @@ __all__ = (
 # Type <prefix>help command for more info on a command.
 # You can also type <prefix>help category for more info on a category.
 
-#ToDo Implement AppCommand Support
 
 class Paginator:
     """A class that aids in paginating code blocks for Discord messages.
@@ -378,10 +377,10 @@ class HelpCommand:
         self._command_impl.remove_check(func)
 
     def get_bot_mapping(self):
-        #ToDo Make App commands working here
         """Retrieves the bot mapping passed to :meth:`send_bot_help`."""
         bot = self.context.bot
         mapping = {cog: cog.get_commands() for cog in bot.cogs.values()}
+        mapping["app_commands"] = {cog: cog.get_app_commands() for cog in bot.cogs.values()} #Do we need this?
         mapping[None] = [c for c in bot.commands if c.cog is None]
         return mapping
 
@@ -852,14 +851,14 @@ class HelpCommand:
         # passes an invalid subcommand, we need to walk through
         # the command group chain ourselves.
         keys = command.split(' ')
-        cmd = bot.all_commands.get(keys[0])
+        cmd = bot.all_commands.get(keys[0]) or bot.all_app_commands.get(keys[0])
         if cmd is None:
             string = await maybe_coro(self.command_not_found, self.remove_mentions(keys[0]))
             return await self.send_error_message(string)
 
         for key in keys[1:]:
             try:
-                found = cmd.all_commands.get(key)
+                found = cmd.all_commands.get(key) or cmd.all_app_commands.get(key)
             except AttributeError:
                 string = await maybe_coro(self.subcommand_not_found, cmd, self.remove_mentions(key))
                 return await self.send_error_message(string)
@@ -997,13 +996,15 @@ class DefaultHelpCommand(HelpCommand):
         signature = self.get_command_signature(command)
         self.paginator.add_line(signature, empty=True)
 
-        if command.help:
+        if hasattr(command, "help") and command.help:
             try:
                 self.paginator.add_line(command.help, empty=True)
             except RuntimeError:
                 for line in command.help.splitlines():
                     self.paginator.add_line(line)
                 self.paginator.add_line()
+
+
 
     def get_destination(self):
         ctx = self.context
@@ -1033,7 +1034,6 @@ class DefaultHelpCommand(HelpCommand):
             return cog.qualified_name + ':' if cog is not None else no_category
 
         commands = set.union(bot.commands, bot.app_commands)
-        print(bot.app_commands)
         filtered = await self.filter_commands(commands, sort=True, key=get_category)
         max_size = self.get_max_size(filtered)
         to_iterate = itertools.groupby(filtered, key=get_category)
@@ -1058,7 +1058,7 @@ class DefaultHelpCommand(HelpCommand):
     async def send_group_help(self, group):
         self.add_command_formatting(group)
 
-        filtered = await self.filter_commands(group.commands, sort=self.sort_commands)
+        filtered = await self.filter_commands(group.commands or group.app_commands, sort=self.sort_commands)
         self.add_indented_commands(filtered, heading=self.commands_heading)
 
         if filtered:
