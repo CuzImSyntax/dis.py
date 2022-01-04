@@ -1137,6 +1137,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 
 
 class AppCommand(Command):
+    #ToDo help, brief? -> Also properly in help command
     #ToDo Look into Docs, for spellings, etc, bsp: error wrong naming in docs
     #ToDo Also for Groups
     #ToDo Add possibility to use discords permissions system
@@ -1171,6 +1172,7 @@ class AppCommand(Command):
         event.
     description: :class:`str`
         The message prefixed into the default help command.
+        The command's description, used in help and discords command description.
     rest_is_raw: :class:`bool`
         If ``False`` and a keyword-only argument is provided then the keyword
         only argument is stripped and handled as if it was a regular argument
@@ -1254,7 +1256,6 @@ class AppCommand(Command):
             description = "-"
 
         self.description: str = description
-        self.help = self.description #Set this to make the help command work maybe rework in future
 
         try:
             checks = func.__commands_checks__
@@ -2187,7 +2188,6 @@ class AppGroup(GroupMixin, AppCommand):
         if options[0]['type'] < 3:
             #ToDo check when no arguments are passed
             ctx.options_passed = options[0].get('options', None)
-            print(ctx.options_passed)
             ctx.invoked_subcommand = self.all_app_commands.get(options[0]['name'], None)
 
         if early_invoke:
