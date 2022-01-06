@@ -1416,7 +1416,7 @@ class AppCommand(Command):
 
         view_iterator = (iter(ctx.options_passed)
                          if ctx.options_passed else
-                         iter(ctx.interaction.data['options']))
+                         iter(ctx.interaction.data.get('options')))
         iterator = iter(self.params.items())
 
         if self.cog is not None:
