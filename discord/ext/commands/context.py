@@ -544,6 +544,14 @@ class InteractionContext:
         return self.interaction.user
 
     @discord.utils.cached_property
+    def author(self) -> Union[User, Member]:
+        """Union[:class:`~discord.User`, :class:`.Member`]:
+        Returns the user associated with this context's application command. Shorthand for :attr:`.Interaction.user`
+        Alias for :attr:`.InteractionContext.user`
+        """
+        return self.interaction.user
+
+    @discord.utils.cached_property
     def me(self) -> Union[Member, ClientUser]:
         """Union[:class:`.Member`, :class:`.ClientUser`]:
         Similar to :attr:`.Guild.me` except it may return the :class:`.ClientUser` in private message contexts.
