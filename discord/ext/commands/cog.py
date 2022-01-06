@@ -238,7 +238,7 @@ class Cog(metaclass=CogMeta):
             parent = command.parent
             if parent is not None:
                 # Get the latest parent reference
-                parent = lookup[parent.name]  # type: ignore
+                parent = app_lookup[parent.qualified_name]  # type: ignore
 
                 # Update our parent's reference to our self
                 parent.remove_app_command(command.name)  # type: ignore
