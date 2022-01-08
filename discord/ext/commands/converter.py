@@ -236,7 +236,11 @@ class MemberConverter(IDConverter[discord.Member]):
         else:
             user_id = int(match.group(1))
             if guild:
-                result = guild.get_member(user_id) or _utils_get(ctx.message.mentions, id=user_id)
+                #Try except as slash commands might not have message attr ToDo Look if extra work is needed
+                try:
+                    result = guild.get_member(user_id) or _utils_get(ctx.message.mentions, id=user_id)
+                except AttributeError:
+                    pass
             else:
                 result = _get_from_guilds(bot, 'get_member', user_id)
 
