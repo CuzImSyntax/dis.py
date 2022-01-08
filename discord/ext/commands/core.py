@@ -1439,8 +1439,10 @@ class AppCommand(Command):
             try:
                 view_item = next(view_iterator)
             except StopIteration:
-                raise TooManyArguments('Too many arguments passed to ' + self.qualified_name)
-            if str(view_item['name']) == str(name):
+                if param.kind is not param.KEYWORD_ONLY:
+                    raise TooManyArguments('Too many arguments passed to ' + self.qualified_name)
+                view_item = {}
+            if str(view_item.get('name')) == str(name):
                 #Testing
                 ctx.view_item = view_item['value']
                 try:
