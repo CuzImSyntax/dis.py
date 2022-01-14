@@ -97,6 +97,10 @@ class Interaction:
         for 15 minutes.
     data: :class:`dict`
         The raw interaction data.
+    locale: :class:`str`
+        The language used by the invoking user
+    guild_locale: :class:`str`
+        The preferred guild's locale. Only available if executed in a guild.
     """
 
     __slots__: Tuple[str, ...] = (
