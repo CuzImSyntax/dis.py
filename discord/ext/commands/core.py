@@ -1602,6 +1602,8 @@ class AppCommand(Command):
         # the invoked subcommand is None.)
         ctx.invoked_subcommand = None
         ctx.options_passed = None
+        #ToDo do we need to change this?
+        ctx.invoked_with = ctx.command.qualified_name
         injected = hooked_wrapped_callback(self, ctx, self.callback)
         await injected(*ctx.args, **ctx.kwargs)
 
