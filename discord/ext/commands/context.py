@@ -402,8 +402,9 @@ class Context(discord.abc.Messageable, Generic[BotT]):
         return await self.message.reply(content, **kwargs)
 
 
+#ToDo Make subclass of messagable?
 class InteractionContext:
-    r"""Represents the context in which a application command is being invoked under.
+    r"""Represents the context in which an application command is being invoked under.
 
     This class contains a lot of meta data to help you understand more about
     the invocation context. This class is not created manually and is instead
@@ -455,6 +456,7 @@ class InteractionContext:
                  kwargs: Dict[str, Any] = MISSING,
                  view_item: Any = None,
                  command: Optional[AppCommand] = None,
+                 invoked_with: Optional[str] = None,
                  invoked_parents: List[str] = MISSING,
                  invoked_subcommand: Optional[AppCommand] = None,
                  options_passed: Optional[Dict] = None,
@@ -467,6 +469,7 @@ class InteractionContext:
         self.kwargs: Dict[str, Any] = kwargs or {}
         self.view_item: Any = view_item
         self.command: Optional[AppCommand] = command
+        self.invoked_with: Optional[str] = invoked_with
         self.invoked_parents: List[str] = invoked_parents or []
         self.invoked_subcommand: Optional[AppCommand] = invoked_subcommand
         self.options_passed: Optional[str] = options_passed
@@ -645,9 +648,9 @@ class InteractionContext:
             else:
                 return None
         except CommandError as e:
-            print(e)
             await cmd.on_help_command_error(self, e)
 
+    #Todo Implement in messageble
     async def reply(self, content: Optional[str] = None, **kwargs: Any) -> Message:
         """|coro|
 
