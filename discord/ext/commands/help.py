@@ -379,9 +379,8 @@ class HelpCommand:
     def get_bot_mapping(self):
         """Retrieves the bot mapping passed to :meth:`send_bot_help`."""
         bot = self.context.bot
-        mapping = {cog: cog.get_commands() for cog in bot.cogs.values()}
-        mapping["app_commands"] = {cog: cog.get_app_commands() for cog in bot.cogs.values()} #Do we need this?
-        mapping[None] = [c for c in bot.commands if c.cog is None]
+        mapping = {cog: cog.get_all_commands() for cog in bot.cogs.values()}
+        mapping[None] = [c for c in bot.commands and bot.app_commands if c.cog is None]
         return mapping
 
     @property
