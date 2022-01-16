@@ -34,7 +34,7 @@ import setuptools.wheel
 
 import discord.utils
 
-from .core import Group, Command
+from .core import Group, Command, AppGroup
 from .errors import CommandError
 
 if TYPE_CHECKING:
@@ -868,7 +868,7 @@ class HelpCommand:
                     return await self.send_error_message(string)
                 cmd = found
 
-        if isinstance(cmd, Group):
+        if isinstance(cmd, Group) or isinstance(cmd, AppGroup):
             return await self.send_group_help(cmd)
         else:
             return await self.send_command_help(cmd)
