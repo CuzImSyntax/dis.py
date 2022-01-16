@@ -246,6 +246,21 @@ class Cog(metaclass=CogMeta):
 
         return self
 
+    #ToDo docs
+    def get_all_commands(self) -> List[Union[Command, AppCommand]]:
+        r"""
+        Returns
+        --------
+        List[Union[:class:`.Command`, :class:`.AppCommand`]]
+            A :class:`list` of :class:`.Command`\s and :class:`.AppCommand`\s that are
+            defined inside this cog.
+
+            .. note::
+
+                This does not include subcommands.
+        """
+        return [c for c in self.__cog_commands__ and self.__cog_app_commands__ if c.parent is None]
+
     def get_commands(self) -> List[Command]:
         r"""
         Returns
