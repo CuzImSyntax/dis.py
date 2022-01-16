@@ -376,6 +376,8 @@ class HelpCommand:
 
         self._command_impl.remove_check(func)
 
+
+    #Todo Make this working
     def get_bot_mapping(self):
         """Retrieves the bot mapping passed to :meth:`send_bot_help`."""
         bot = self.context.bot
