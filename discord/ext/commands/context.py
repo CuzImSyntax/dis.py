@@ -651,7 +651,6 @@ class InteractionContext:
             await cmd.on_help_command_error(self, e)
 
     #Todo Implement in messageble
-    #ToDo What is this returning?
     async def reply(self, content: Optional[str] = None, **kwargs: Any) -> Message:
         """|coro|
 

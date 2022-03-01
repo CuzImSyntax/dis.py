@@ -1414,9 +1414,8 @@ class AppCommand(Command):
         args = ctx.args
         kwargs = ctx.kwargs
 
-        #Todo Make better together with 2193 (ToDo)
-        view_iterator = (iter(ctx.options_passed if len(ctx.options_passed) else {})
-                         if ctx.options_passed is not None else
+        view_iterator = (iter(ctx.options_passed)
+                         if ctx.options_passed else
                          iter(ctx.interaction.data.get('options', ())))
         iterator = iter(self.params.items())
 
@@ -2190,9 +2189,7 @@ class AppGroup(GroupMixin, AppCommand):
 
         options = ctx.interaction.data['options'] if not opt else opt
         if options[0]['type'] < 3:
-            #ToDo check when no arguments are passed really need to take a look on this to change experimental fix in
-            # 1417
-            #when is options_passed None and when not
+            #ToDo check when no arguments are passed
             ctx.options_passed = options[0].get('options', None)
             ctx.invoked_subcommand = self.all_app_commands.get(options[0]['name'], None)
 
