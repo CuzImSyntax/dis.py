@@ -109,7 +109,7 @@ class Converter(Protocol[T_co]):
     method to do its conversion logic. This method must be a :ref:`coroutine <coroutine>`.
     """
 
-    async def convert(self, ctx: Context, argument: str) -> T_co:
+    async def convert(self, ctx: Union[Context, InteractionContext], argument: str) -> T_co:
         """|coro|
 
         The method to override to do conversion logic.
@@ -867,6 +867,24 @@ class GuildStickerConverter(IDConverter[discord.GuildSticker]):
         return result
 
 
+class AppCommandAttachmentConverter(Converter[discord.Attachment]):
+    #ToDo Docs, Error throwing
+    """Converts to a :class:`~discord.Attachment`.
+
+    This converts an attachment given by an user in a slash command to an a :class:`~discord.Attachment`.
+    """
+
+    async def convert(self, ctx: InteractionContext, argument: str) -> discord.Attachment:
+
+        result = discord.Attachment(data=ctx.interaction.data['resolved']['attachments'][str(ctx.view_item)],
+                                        state=ctx.interaction._state)
+
+        if result is None:
+            raise BadArgument("Can't convert Attachment")
+
+        return result
+
+
 class clean_content(Converter[str]):
     """Converts the argument to mention scrubbed version of
     said content.
@@ -1056,6 +1074,7 @@ CONVERTER_MAPPING: Dict[Type[Any], Any] = {
     discord.Thread: ThreadConverter,
     discord.abc.GuildChannel: GuildChannelConverter,
     discord.GuildSticker: GuildStickerConverter,
+    discord.Attachment: AppCommandAttachmentConverter
 }
 
 

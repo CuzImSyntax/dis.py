@@ -1165,7 +1165,8 @@ class BotBase(GroupMixin):
         discord.channel.VoiceChannel: 7,
         discord.role.Role: 8,
         "Mentionable": 9,
-        float: 10
+        float: 10,
+        discord.Attachment: 11,
     }
 
     channel_types_dict = {

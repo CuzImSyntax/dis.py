@@ -458,6 +458,7 @@ class InteractionResponse:
             )
             self._responded = True
 
+    #ToDo Support attachment
     async def send_message(
         self,
         content: Optional[Any] = None,
