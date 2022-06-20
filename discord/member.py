@@ -297,7 +297,7 @@ class Member(discord.abc.Messageable, _UserTag):
         self.nick: Optional[str] = data.get('nick', None)
         self.pending: bool = data.get('pending', False)
         self._avatar: Optional[str] = data.get('avatar')
-        self.communication_disabled_until : Optional[datetime.datetime] = utils.parse_time(data.get('communication_disabled_until'))
+        self.communication_disabled_until: Optional[datetime.datetime] = utils.parse_time(data.get('communication_disabled_until'))
 
     def __str__(self) -> str:
         return str(self._user)
@@ -329,6 +329,7 @@ class Member(discord.abc.Messageable, _UserTag):
         self._roles = utils.SnowflakeList(map(int, data['roles']))
         self.nick = data.get('nick', None)
         self.pending = data.get('pending', False)
+        self.communication_disabled_until = utils.parse_time(data.get('communication_disabled_until'))
 
     @classmethod
     def _try_upgrade(cls: Type[M], *, data: UserWithMemberPayload, guild: Guild, state: ConnectionState) -> Union[User, M]:
@@ -355,6 +356,7 @@ class Member(discord.abc.Messageable, _UserTag):
         self.activities = member.activities
         self._state = member._state
         self._avatar = member._avatar
+        self.communication_disabled_until = member.communication_disabled_until
 
         # Reference will not be copied unless necessary by PRESENCE_UPDATE
         # See below
@@ -381,6 +383,7 @@ class Member(discord.abc.Messageable, _UserTag):
         self.premium_since = utils.parse_time(data.get('premium_since'))
         self._roles = utils.SnowflakeList(map(int, data['roles']))
         self._avatar = data.get('avatar')
+        self.communication_disabled_until = utils.parse_time(data.get('communication_disabled_until'))
 
     def _presence_update(self, data: PartialPresenceUpdate, user: UserPayload) -> Optional[Tuple[User, User]]:
         self.activities = tuple(map(create_activity, data['activities']))
@@ -923,3 +926,15 @@ class Member(discord.abc.Messageable, _UserTag):
             The role or ``None`` if not found in the member's roles.
         """
         return self.guild.get_role(role_id) if self._roles.has(role_id) else None
+
+    def is_timed_out(self) -> bool:
+        """Returns whether this member is timed out.
+        .. versionadded:: 2.0
+        Returns
+        --------
+        :class:`bool`
+            ``True`` if the member is timed out. ``False`` otherwise.
+        """
+        if self.communication_disabled_until is not None:
+            return utils.utcnow() < self.communication_disabled_until
+        return False
